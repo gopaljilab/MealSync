@@ -40,12 +40,28 @@ MealSync is a smart food management system for PGs and hostels that reduces food
 
 ## Role-Based Dashboards
 
-- **PG Owner** (`/dashboard/owner`): Meal input, AI prediction (90% rule), leftover reporting, NGO notification, analytics chart, green score
-- **NGO** (`/dashboard/ngo`): Pending pickup requests with accept/reject, pickup history
-- **Resident** (`/dashboard/resident`): Meal confirmation (Yes/No), star rating feedback
+- **PG Owner** (`/dashboard/owner`): Meal input, AI prediction, leftover reporting, auto-NGO trigger (≥10 leftover), analytics chart, green score, **raw material calculator**, **waste-to-cost analytics**, **smart suggestions with weather note**, **global impact dashboard**
+- **NGO** (`/dashboard/ngo`): Pending requests with food type/prep time, accept/reject, **confirm pickup button**, **suggested route ordering**, **impact metrics card**, pickup history
+- **Resident** (`/dashboard/resident`): Meal confirmation with **meal reminder banner**, **auto-fill from schedule**, **weekly schedule editor**, **community poll/voting**, sustainability impact card, star rating feedback
+
+## Intelligence Routes (not in OpenAPI spec — direct fetch)
+
+- `GET /api/intelligence/raw-materials` — ingredient quantities for today's meals
+- `GET /api/intelligence/waste-cost` — weekly waste in monetary terms
+- `GET /api/intelligence/suggestions` — smart suggestions with weather/weekend note
+- `GET /api/intelligence/global-impact` — aggregate stats across all PGs/NGOs
+- `GET /api/intelligence/resident-impact` — per-resident sustainability data
+- `GET /api/intelligence/ngo-impact` — per-NGO collection stats
+- `POST /api/ngo/requests/:id/complete` — mark pickup as completed
+- `GET /api/schedules/mine` + `POST /api/schedules/mine` — resident weekly schedule
+- `GET /api/polls` + `POST /api/polls/:id/vote` — community poll voting
+
+## Auto-NGO Trigger
+
+When a PG owner reports ≥10 leftover meals via `POST /api/meals/:id/leftover`, an NGO request is automatically created and the response includes `autoNgoTriggered: true`.
 
 ## Auth
 
-Session-based auth with express-session. Frontend uses hybrid approach: calls real API endpoints, falls back to localStorage mock if API unavailable.
+Session-based auth with express-session. All API calls use `credentials: "include"`. No localStorage fallbacks — 401 is returned when unauthenticated.
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

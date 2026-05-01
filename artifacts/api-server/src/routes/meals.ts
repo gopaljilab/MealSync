@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { mealsTable, ngoRequestsTable, usersTable } from "@workspace/db";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { CreateMealBody, ReportLeftoverBody } from "@workspace/api-zod";
 
 const router = Router();
@@ -48,6 +48,8 @@ router.post("/meals/:id/predict", requireOwner, async (req, res) => {
   });
 });
 
+const AUTO_NGO_THRESHOLD = 10;
+
 router.post("/meals/:id/leftover", requireOwner, async (req, res) => {
   const id = parseInt(req.params.id);
   const parse = ReportLeftoverBody.safeParse(req.body);
@@ -60,7 +62,31 @@ router.post("/meals/:id/leftover", requireOwner, async (req, res) => {
     .where(eq(mealsTable.id, id))
     .returning();
 
-  return res.json(formatMeal(meal));
+  let autoTriggered = false;
+  if (leftoverMeals >= AUTO_NGO_THRESHOLD && !meal.ngoNotified) {
+    const [owner] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, req.session.userId!))
+      .limit(1);
+    if (owner) {
+      const pickupTime = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+      await db.insert(ngoRequestsTable).values({
+        mealId: id,
+        pgName: owner.pgName ?? owner.name,
+        pgLocation: "Koramangala, Bangalore",
+        availableMeals: leftoverMeals,
+        pickupTime,
+        mealMenu: meal.menu,
+        status: "pending",
+      });
+      await db.update(mealsTable).set({ ngoNotified: true }).where(eq(mealsTable.id, id));
+      meal.ngoNotified = true;
+      autoTriggered = true;
+    }
+  }
+
+  return res.json({ ...formatMeal(meal), autoNgoTriggered: autoTriggered });
 });
 
 router.post("/meals/:id/notify-ngo", requireOwner, async (req, res) => {

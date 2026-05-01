@@ -1,0 +1,221 @@
+Enhance my existing MealSync web application into a complete, production-like ecosystem. The app already includes authentication, role-based dashboards (Owner, NGO, Resident), and real data handling.
+
+DO NOT rebuild or redesign the UI. Only enhance functionality and add new intelligent features across all three roles.
+
+-----------------------------------
+
+🎯 CORE GOAL:
+
+Transform the application into a connected ecosystem where:
+Resident → provides input  
+Owner → makes data-driven decisions  
+NGO → handles efficient redistribution  
+
+All three roles must work in a seamless loop.
+
+-----------------------------------
+
+👤 1. RESIDENT DASHBOARD – "INPUT ENGINE"
+
+Focus: Frictionless engagement and user participation
+
+Add the following features:
+
+1. Weekly Default Schedule:
+- Allow users to set recurring attendance preferences
+  Example:
+  {
+    userId,
+    weekday: { lunch: false, dinner: true }
+  }
+
+- Auto-fill daily attendance based on this
+
+---
+
+2. Meal Reminder System:
+- Show in-app reminder (no need for real push notification)
+- Display banner:
+  "Reminder: Confirm your meal before 6 PM"
+
+---
+
+3. Sustainability Profile:
+- Show personal impact stats:
+  - Meals contributed to saving
+  - Estimated food saved (kg)
+
+Example:
+"You helped save 5 meals this week 🎉"
+
+---
+
+4. Poll / Voting System:
+- Add simple voting feature:
+  "Vote for Sunday Special"
+
+Store:
+{
+  pollId,
+  options,
+  votes
+}
+
+Display winning option to Owner
+
+-----------------------------------
+
+🏢 2. OWNER DASHBOARD – "CONTROL TOWER"
+
+Focus: Actionable intelligence
+
+Enhance with:
+
+1. Raw Material Calculator:
+- Based on predicted meals, show:
+  Example:
+  "Paneer required: 5.5 kg"
+  "Rice required: 12 kg"
+
+Use simple ratios (no complex logic needed)
+
+---
+
+2. Waste-to-Cost Analytics:
+- Convert leftover meals into cost:
+  cost = leftoverMeals * costPerMeal
+
+Display:
+"You lost ₹240 due to food waste"
+
+---
+
+3. Auto NGO Trigger:
+- If leftover > threshold (e.g., 10 meals)
+→ Automatically create NGO alert
+
+No manual button needed
+
+---
+
+4. Weather/Event Insight (Simulated):
+- Add simple logic:
+  If weekend → lower attendance
+  If rain (mock value) → higher attendance
+
+Display:
+"Prediction adjusted based on weather & trends"
+
+---
+
+5. Smart Suggestions Panel:
+Display insights:
+- "Reduce cooking by 10% tomorrow"
+- "Low attendance on Sundays observed"
+
+-----------------------------------
+
+🚚 3. NGO DASHBOARD – "LOGISTICS HUB"
+
+Focus: Speed, coordination, tracking
+
+Add:
+
+1. Multi-Pickup View:
+- Show multiple PG alerts
+- List view is enough (no real map needed)
+
+---
+
+2. Route Suggestion (Basic):
+- Sort pickups by time or distance (mock logic)
+
+Display:
+"Suggested pickup order: PG1 → PG2 → PG3"
+
+---
+
+3. Food Details:
+Each alert should include:
+- Menu
+- Quantity
+- Food type (Dry / Gravy)
+- Prep time
+
+---
+
+4. Digital Pickup Confirmation:
+- Add "Confirm Pickup" button
+
+On click:
+- Mark alert as completed
+- Save timestamp
+
+---
+
+5. Impact Metrics:
+Display:
+- Total meals collected
+- Total pickups
+- Weekly summary
+
+Example:
+"You redistributed 120 meals this week"
+
+-----------------------------------
+
+🔄 SYSTEM INTEGRATION (VERY IMPORTANT)
+
+Ensure all roles are connected:
+
+- Resident responses → affect Owner prediction
+- Owner leftovers → trigger NGO alerts
+- NGO actions → update system stats
+
+-----------------------------------
+
+📊 GLOBAL IMPACT DASHBOARD (OPTIONAL BUT STRONG)
+
+Add small section (Owner or Admin):
+- Total meals saved
+- Total waste reduced
+- Total NGO pickups
+
+-----------------------------------
+
+💾 DATA HANDLING
+
+Continue using existing storage system (localStorage or DB)
+
+Add new collections:
+- schedules
+- polls
+- insights
+- impactMetrics
+
+-----------------------------------
+
+⚠️ IMPORTANT RULES
+
+- Do NOT redesign UI
+- Add features as small sections/cards
+- Keep logic simple (no complex AI required)
+- Focus on usability and clarity
+
+-----------------------------------
+
+🎯 FINAL RESULT
+
+The app should feel like:
+- A connected system
+- Data-driven decision platform
+- Not just a CRUD project
+
+Each role should:
+- Interact with others
+- Influence system behavior
+
+-----------------------------------
+
+GOAL:
+Make MealSync look like a real startup ecosystem solving a real-world problem end-to-end.
