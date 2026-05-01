@@ -12,40 +12,33 @@ export default function Register() {
   const [, setLocation] = useLocation();
   const { login } = useAuth();
   const registerMutation = useRegister();
-  
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<RegisterBodyRole>("owner");
   const [pgName, setPgName] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     try {
-      const response = await registerMutation.mutateAsync({ 
-        data: { 
+      const response = await registerMutation.mutateAsync({
+        data: {
           name,
-          email, 
+          email,
           password,
           role,
-          pgName: role === "owner" ? pgName : undefined
-        } 
+          pgName: role === "owner" ? pgName : undefined,
+        },
       });
       login(response.user);
       setLocation(`/dashboard/${response.user.role}`);
-      toast.success("Registered successfully");
-    } catch (err) {
-      console.warn("API register failed, using mock auth", err);
-      const mockUser = {
-        id: Math.floor(Math.random() * 1000),
-        name,
-        email,
-        role,
-        pgName: role === "owner" ? pgName : undefined
-      };
-      login(mockUser);
-      setLocation(`/dashboard/${role}`);
-      toast.success("Registered (Mock Mode)");
+      toast.success("Account created successfully");
+    } catch (err: any) {
+      const msg = err?.data?.error ?? "Registration failed. Please try again.";
+      setError(msg);
     }
   };
 
@@ -60,40 +53,47 @@ export default function Register() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
-              <Input 
-                id="name" 
-                required 
+              <Input
+                id="name"
+                required
+                autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                data-testid="input-name"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                required 
+              <Input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                data-testid="input-email"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                required 
+              <Input
+                id="password"
+                type="password"
+                required
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                data-testid="input-password"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Role</Label>
-              <select 
+              <select
                 id="role"
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 value={role}
                 onChange={(e) => setRole(e.target.value as RegisterBodyRole)}
+                data-testid="select-role"
               >
                 <option value="owner">PG Owner</option>
                 <option value="ngo">NGO</option>
@@ -103,21 +103,33 @@ export default function Register() {
             {role === "owner" && (
               <div className="space-y-2">
                 <Label htmlFor="pgName">PG Name</Label>
-                <Input 
-                  id="pgName" 
-                  required 
+                <Input
+                  id="pgName"
+                  required
                   value={pgName}
                   onChange={(e) => setPgName(e.target.value)}
+                  data-testid="input-pgname"
                 />
               </div>
             )}
+            {error && (
+              <p className="text-sm text-destructive" data-testid="text-register-error">{error}</p>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={registerMutation.isPending}
+              data-testid="button-register"
+            >
               {registerMutation.isPending ? "Creating account..." : "Register"}
             </Button>
             <div className="text-sm text-center text-muted-foreground">
-              Already have an account? <Link href="/login" className="text-primary hover:underline">Login</Link>
+              Already have an account?{" "}
+              <Link href="/login" className="text-primary hover:underline">
+                Login
+              </Link>
             </div>
           </CardFooter>
         </form>

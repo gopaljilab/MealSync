@@ -1,0 +1,129 @@
+Enhance my existing MealSync web application. DO NOT rebuild from scratch. Modify and improve the current codebase.
+
+-----------------------------------
+
+PRIMARY GOAL:
+Convert the app from using dummy/demo data to real user-driven dynamic data with persistence.
+
+-----------------------------------
+
+CRITICAL RULES:
+- Do NOT use any hardcoded or static demo data
+- Remove all placeholder arrays and fake values
+- All data must come from user input and be stored
+- App must retain data even after refresh
+
+-----------------------------------
+
+STEP 1: REMOVE DUMMY DATA
+- Find and remove:
+  - Static arrays (e.g., const data = [...])
+  - Default useState with sample values
+  - Hardcoded UI numbers
+- Replace with empty states:
+  useState([])
+
+-----------------------------------
+
+STEP 2: IMPLEMENT REAL DATA HANDLING
+
+PG OWNER DASHBOARD:
+- When user enters:
+  - menu
+  - expected_people
+
+- On "Predict Meals":
+  - Calculate predictedMeals dynamically:
+    predictedMeals = expected_people * 0.9 (or similar logic)
+
+- Save this data in state and localStorage
+
+- After meal:
+  - User inputs leftover meals
+  - Update the same record
+
+- "Send to NGO":
+  - Create a real alert object and store it
+
+-----------------------------------
+
+STEP 3: LOCAL STORAGE PERSISTENCE
+
+- Store:
+  - meals
+  - alerts
+  - user role
+
+- Use:
+  localStorage.setItem()
+  localStorage.getItem()
+
+- Load stored data on app start using useEffect
+
+-----------------------------------
+
+STEP 4: NGO DASHBOARD
+
+- Fetch alerts from stored data
+- Show only alerts with status "pending"
+
+- Add buttons:
+  - Accept → update status to "accepted"
+  - Reject → update status to "rejected"
+
+- Update data in localStorage after action
+
+-----------------------------------
+
+STEP 5: ROLE-BASED ACCESS
+
+- Store selected role during login
+- Based on role:
+  - PG Owner → PG Dashboard
+  - NGO → NGO Dashboard
+  - Resident → Resident View
+
+-----------------------------------
+
+STEP 6: RESIDENT FEATURE (LIGHTWEIGHT)
+
+- Add:
+  - “Will you eat?” (Yes/No)
+  - Save response in localStorage
+
+-----------------------------------
+
+STEP 7: DYNAMIC UI (IMPORTANT)
+
+Replace all static UI values with dynamic ones:
+- Predicted meals
+- Leftover meals
+- Alerts
+- Analytics
+
+Everything should reflect real stored data
+
+-----------------------------------
+
+STEP 8: KEEP UI SAME (IMPORTANT)
+
+- Do NOT redesign UI completely
+- Only improve functionality
+- Keep existing layout and styling intact
+
+-----------------------------------
+
+FINAL EXPECTED RESULT:
+
+- PG Owner enters real data → saved and displayed
+- NGO receives real alerts → can accept/reject
+- Data persists after refresh
+- No fake/demo data anywhere
+- App works like a real MVP
+
+-----------------------------------
+
+FOCUS:
+
+Enhance logic and data flow, not visuals.
+Make the app functional, realistic, and demo-ready.

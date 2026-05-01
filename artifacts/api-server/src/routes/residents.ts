@@ -1,16 +1,40 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { mealConfirmationsTable, feedbackTable } from "@workspace/db";
+import { mealConfirmationsTable, feedbackTable, mealsTable } from "@workspace/db";
 import { ConfirmMealBody, SubmitFeedbackBody } from "@workspace/api-zod";
+import { desc, gte, and, eq } from "drizzle-orm";
 
 const router = Router();
+
+router.get("/residents/today-menu", async (req, res) => {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const meals = await db
+    .select()
+    .from(mealsTable)
+    .where(gte(mealsTable.date, todayStart))
+    .orderBy(desc(mealsTable.date))
+    .limit(5);
+
+  return res.json(
+    meals.map((m) => ({
+      id: m.id,
+      menu: m.menu,
+      expectedPeople: m.expectedPeople,
+      date: m.date instanceof Date ? m.date.toISOString() : m.date,
+    })),
+  );
+});
 
 router.post("/residents/confirm-meal", async (req, res) => {
   const parse = ConfirmMealBody.safeParse(req.body);
   if (!parse.success) return res.status(400).json({ error: "Invalid input" });
   const { willEat, mealDate } = parse.data;
 
-  const residentId = req.session.userId ?? 1;
+  if (!req.session.userId) return res.status(401).json({ error: "Not authenticated" });
+  const residentId = req.session.userId;
+
   const [confirmation] = await db
     .insert(mealConfirmationsTable)
     .values({ residentId, willEat, mealDate })
@@ -29,7 +53,9 @@ router.post("/residents/feedback", async (req, res) => {
   if (!parse.success) return res.status(400).json({ error: "Invalid input" });
   const { rating, comment, mealDate } = parse.data;
 
-  const residentId = req.session.userId ?? 1;
+  if (!req.session.userId) return res.status(401).json({ error: "Not authenticated" });
+  const residentId = req.session.userId;
+
   const [fb] = await db
     .insert(feedbackTable)
     .values({ residentId, rating, comment: comment ?? null, mealDate })

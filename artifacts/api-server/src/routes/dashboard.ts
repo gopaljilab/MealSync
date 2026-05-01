@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { mealsTable, ngoRequestsTable } from "@workspace/db";
-import { eq, gte, and, sql } from "drizzle-orm";
+import { eq, gte, and, desc } from "drizzle-orm";
 
 const router = Router();
 
@@ -12,12 +12,12 @@ function getTodayStart() {
 }
 
 router.get("/dashboard/owner-stats", async (req, res) => {
-  const ownerId = req.session.userId;
-  if (!ownerId) {
-    return res.json({ totalMealsToday: 120, predictedMeals: 108, leftoverMeals: 14, mealsServed: 106 });
+  if (!req.session.userId) {
+    return res.status(401).json({ error: "Not authenticated" });
   }
-
+  const ownerId = req.session.userId;
   const todayStart = getTodayStart();
+
   const todayMeals = await db
     .select()
     .from(mealsTable)
@@ -28,56 +28,88 @@ router.get("/dashboard/owner-stats", async (req, res) => {
   const leftoverMeals = todayMeals.reduce((s, m) => s + (m.leftoverMeals ?? 0), 0);
   const mealsServed = todayMeals.reduce((s, m) => s + (m.actualServed ?? 0), 0);
 
-  return res.json({ totalMealsToday: totalMealsToday || 120, predictedMeals: predictedMeals || 108, leftoverMeals: leftoverMeals || 14, mealsServed: mealsServed || 106 });
+  return res.json({ totalMealsToday, predictedMeals, leftoverMeals, mealsServed });
 });
 
 router.get("/dashboard/green-score", async (req, res) => {
-  const ownerId = req.session.userId;
-  if (!ownerId) {
-    return res.json({ score: 85, mealsSavedToday: 12, totalMealsSaved: 340, message: "Great job reducing waste this week!" });
+  if (!req.session.userId) {
+    return res.status(401).json({ error: "Not authenticated" });
   }
+  const ownerId = req.session.userId;
 
   const allMeals = await db.select().from(mealsTable).where(eq(mealsTable.ownerId, ownerId));
-  const totalMealsSaved = allMeals.reduce((s, m) => {
-    if (!m.leftoverMeals || !m.predictedMeals) return s;
-    const saved = Math.max(0, m.predictedMeals - m.leftoverMeals);
-    return s + saved;
-  }, 0);
 
-  const todayStart = getTodayStart();
-  const todayMeals = allMeals.filter((m) => new Date(m.date) >= todayStart);
-  const mealsSavedToday = todayMeals.reduce((s, m) => {
-    if (!m.leftoverMeals || !m.predictedMeals) return s;
+  const totalMealsSaved = allMeals.reduce((s, m) => {
+    if (m.leftoverMeals == null || m.predictedMeals == null) return s;
     return s + Math.max(0, m.predictedMeals - m.leftoverMeals);
   }, 0);
 
-  const score = Math.min(100, Math.round(50 + (totalMealsSaved / Math.max(1, allMeals.length)) * 5));
+  const todayStart = getTodayStart();
+  const mealsSavedToday = allMeals
+    .filter((m) => new Date(m.date) >= todayStart)
+    .reduce((s, m) => {
+      if (m.leftoverMeals == null || m.predictedMeals == null) return s;
+      return s + Math.max(0, m.predictedMeals - m.leftoverMeals);
+    }, 0);
+
+  const servedMeals = allMeals.filter((m) => m.actualServed != null);
+  const wasteRatio =
+    servedMeals.length === 0
+      ? 0
+      : servedMeals.reduce((s, m) => {
+          const waste = (m.leftoverMeals ?? 0) / Math.max(1, m.actualServed ?? 1);
+          return s + waste;
+        }, 0) / servedMeals.length;
+
+  const score = Math.max(0, Math.min(100, Math.round(100 - wasteRatio * 100)));
 
   return res.json({
-    score: score || 85,
-    mealsSavedToday: mealsSavedToday || 12,
-    totalMealsSaved: totalMealsSaved || 340,
-    message: score >= 80 ? "Excellent work reducing food waste!" : "Keep improving to boost your green score!",
+    score,
+    mealsSavedToday,
+    totalMealsSaved,
+    message:
+      score >= 80
+        ? "Excellent work reducing food waste!"
+        : score >= 50
+          ? "Good effort — keep cutting down leftovers."
+          : "Let's work on reducing waste more.",
   });
 });
 
 router.get("/dashboard/daily-trends", async (req, res) => {
-  const today = new Date();
-  const trends = [];
-
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split("T")[0];
-
-    const base = 90 + Math.floor(Math.random() * 30);
-    const predicted = Math.round(base * 0.92);
-    const actual = Math.round(base * (0.85 + Math.random() * 0.1));
-    const leftover = Math.max(0, actual - Math.round(actual * (0.85 + Math.random() * 0.1)));
-    const wasteReduction = parseFloat((((base - leftover) / base) * 100).toFixed(1));
-
-    trends.push({ date: dateStr, predicted, actual, leftover, wasteReduction });
+  if (!req.session.userId) {
+    return res.status(401).json({ error: "Not authenticated" });
   }
+  const ownerId = req.session.userId;
+
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  const meals = await db
+    .select()
+    .from(mealsTable)
+    .where(and(eq(mealsTable.ownerId, ownerId), gte(mealsTable.date, sevenDaysAgo)))
+    .orderBy(mealsTable.date);
+
+  const byDate: Record<string, { predicted: number; actual: number; leftover: number }> = {};
+
+  for (const meal of meals) {
+    const d = new Date(meal.date).toISOString().split("T")[0];
+    if (!byDate[d]) byDate[d] = { predicted: 0, actual: 0, leftover: 0 };
+    byDate[d].predicted += meal.predictedMeals ?? 0;
+    byDate[d].actual += meal.actualServed ?? 0;
+    byDate[d].leftover += meal.leftoverMeals ?? 0;
+  }
+
+  const trends = Object.entries(byDate).map(([date, v]) => ({
+    date,
+    predicted: v.predicted,
+    actual: v.actual,
+    leftover: v.leftover,
+    wasteReduction:
+      v.actual > 0 ? parseFloat((((v.actual - v.leftover) / v.actual) * 100).toFixed(1)) : 0,
+  }));
 
   return res.json(trends);
 });
