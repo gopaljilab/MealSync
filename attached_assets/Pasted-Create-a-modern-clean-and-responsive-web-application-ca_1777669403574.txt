@@ -1,0 +1,128 @@
+Create a modern, clean, and responsive web application called "MealSync" – a smart food management system for PGs and hostels that reduces food waste and shortages using demand prediction and redistribution.
+
+The app should have a simple, minimal UI with role-based dashboards for 3 types of users:
+1. PG Owner / Mess Staff
+2. NGO
+3. Resident (optional but included)
+
+Use a card-based layout, soft colors (green, white, grey), and keep the UI compact, clean, and easy to use.
+
+-----------------------------------
+
+AUTHENTICATION SYSTEM:
+- Login and Register page
+- Fields: Email/Phone, Password
+- Role selection dropdown:
+  - PG Owner
+  - NGO
+  - Resident
+- After login, redirect to respective dashboard
+
+-----------------------------------
+
+PG OWNER DASHBOARD (MAIN FOCUS):
+
+Design a clean dashboard with sections:
+
+1. TOP STATS CARDS:
+- Total Meals Today
+- Predicted Meals
+- Leftover Meals
+
+2. MEAL INPUT SECTION:
+- Input field: Menu (text)
+- Input field: Expected number of people
+- Button: "Predict Meals"
+
+LOGIC:
+- Show predicted meals (can be mock logic like expected_people * 0.9)
+
+3. LEFTOVER SECTION:
+- Input leftover meals after serving
+- Button: "Send to NGO"
+
+4. ANALYTICS SECTION:
+- Simple chart (mock or basic)
+- Show:
+  - Waste reduction
+  - Daily trends
+
+5. GREEN SCORE:
+- Display a score like "Green Score: 85%"
+- Add small message: "You saved 12 meals today 🎉"
+
+-----------------------------------
+
+NGO DASHBOARD:
+
+1. NOTIFICATION CARD:
+- "Food Available: X meals"
+- Show location (PG name or dummy location)
+- Show pickup time
+
+2. ACTION BUTTONS:
+- Accept Pickup
+- Reject
+
+3. MAP SECTION (optional/simple):
+- Show basic map or placeholder
+
+4. HISTORY SECTION:
+- List of previous pickups
+
+-----------------------------------
+
+RESIDENT DASHBOARD:
+
+1. MEAL CONFIRMATION:
+- Question: "Will you eat today?"
+- Buttons: Yes / No
+
+2. FEEDBACK:
+- Star rating (1–5)
+
+-----------------------------------
+
+GENERAL FEATURES:
+
+- Role-based navigation
+- Clean navbar with role name
+- Logout button
+- Mobile responsive design
+- Use cards instead of long forms
+
+-----------------------------------
+
+TECH STACK (if needed):
+
+Frontend:
+- React (with functional components)
+- Tailwind CSS for styling
+
+Backend:
+- Firebase (Authentication + Firestore)
+
+OR
+- Node.js + Express + MongoDB (optional)
+
+-----------------------------------
+
+EXTRA TOUCH (IMPORTANT):
+
+- Show success messages like:
+  "Meals predicted successfully"
+  "NGO notified successfully"
+
+- Add small animations or hover effects
+
+-----------------------------------
+
+GOAL:
+
+The app should look like a real startup MVP:
+- Simple
+- Clean
+- Functional
+- Easy to demo in an ideathon
+
+Focus more on UI/UX and flow rather than complex backend logic.

@@ -1,22 +1,30 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: MealSync API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: meals
+    description: Meal management
+  - name: ngo
+    description: NGO pickup operations
+  - name: residents
+    description: Resident operations
+  - name: dashboard
+    description: Dashboard stats
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +32,331 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterBody"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /meals:
+    get:
+      operationId: listMeals
+      tags: [meals]
+      summary: List all meals for the logged-in PG
+      responses:
+        "200":
+          description: List of meals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Meal"
+    post:
+      operationId: createMeal
+      tags: [meals]
+      summary: Create a meal entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMealBody"
+      responses:
+        "201":
+          description: Meal created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meal"
+
+  /meals/{id}/predict:
+    post:
+      operationId: predictMeal
+      tags: [meals]
+      summary: Predict meals for a given meal entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Prediction result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MealPrediction"
+
+  /meals/{id}/leftover:
+    post:
+      operationId: reportLeftover
+      tags: [meals]
+      summary: Report leftover meals
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeftoverBody"
+      responses:
+        "200":
+          description: Leftover reported
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meal"
+
+  /meals/{id}/notify-ngo:
+    post:
+      operationId: notifyNgo
+      tags: [meals]
+      summary: Notify NGO about available leftovers
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: NGO notified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NgoRequest"
+
+  /ngo/requests:
+    get:
+      operationId: listNgoRequests
+      tags: [ngo]
+      summary: List all pending NGO pickup requests
+      responses:
+        "200":
+          description: List of NGO requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NgoRequest"
+
+  /ngo/requests/{id}/accept:
+    post:
+      operationId: acceptNgoRequest
+      tags: [ngo]
+      summary: Accept a pickup request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NgoRequest"
+
+  /ngo/requests/{id}/reject:
+    post:
+      operationId: rejectNgoRequest
+      tags: [ngo]
+      summary: Reject a pickup request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NgoRequest"
+
+  /ngo/history:
+    get:
+      operationId: getNgoHistory
+      tags: [ngo]
+      summary: Get pickup history for this NGO
+      responses:
+        "200":
+          description: History list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NgoRequest"
+
+  /residents/confirm-meal:
+    post:
+      operationId: confirmMeal
+      tags: [residents]
+      summary: Resident confirms meal attendance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmMealBody"
+      responses:
+        "200":
+          description: Confirmation saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MealConfirmation"
+
+  /residents/feedback:
+    post:
+      operationId: submitFeedback
+      tags: [residents]
+      summary: Resident submits meal feedback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedbackBody"
+      responses:
+        "200":
+          description: Feedback saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feedback"
+
+  /dashboard/owner-stats:
+    get:
+      operationId: getOwnerStats
+      tags: [dashboard]
+      summary: Get PG owner dashboard stats
+      responses:
+        "200":
+          description: Owner stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerStats"
+
+  /dashboard/green-score:
+    get:
+      operationId: getGreenScore
+      tags: [dashboard]
+      summary: Get green score and savings for PG
+      responses:
+        "200":
+          description: Green score
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GreenScore"
+
+  /dashboard/daily-trends:
+    get:
+      operationId: getDailyTrends
+      tags: [dashboard]
+      summary: Get daily meal trends for analytics chart
+      responses:
+        "200":
+          description: Daily trends
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DailyTrend"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +367,290 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [owner, ngo, resident]
+        pgName:
+          type: string
+      required:
+        - id
+        - email
+        - name
+        - role
+
+    RegisterBody:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [owner, ngo, resident]
+        pgName:
+          type: string
+      required:
+        - email
+        - password
+        - name
+        - role
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        message:
+          type: string
+      required:
+        - user
+        - message
+
+    Meal:
+      type: object
+      properties:
+        id:
+          type: integer
+        menu:
+          type: string
+        expectedPeople:
+          type: integer
+        predictedMeals:
+          type: integer
+        actualServed:
+          type: integer
+        leftoverMeals:
+          type: integer
+        date:
+          type: string
+        ngoNotified:
+          type: boolean
+        status:
+          type: string
+          enum: [pending, served, completed]
+      required:
+        - id
+        - menu
+        - expectedPeople
+        - date
+        - status
+
+    CreateMealBody:
+      type: object
+      properties:
+        menu:
+          type: string
+        expectedPeople:
+          type: integer
+      required:
+        - menu
+        - expectedPeople
+
+    MealPrediction:
+      type: object
+      properties:
+        predictedMeals:
+          type: integer
+        confidence:
+          type: number
+        message:
+          type: string
+      required:
+        - predictedMeals
+        - confidence
+        - message
+
+    LeftoverBody:
+      type: object
+      properties:
+        leftoverMeals:
+          type: integer
+        actualServed:
+          type: integer
+      required:
+        - leftoverMeals
+        - actualServed
+
+    NgoRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        pgName:
+          type: string
+        pgLocation:
+          type: string
+        availableMeals:
+          type: integer
+        pickupTime:
+          type: string
+        status:
+          type: string
+          enum: [pending, accepted, rejected, completed]
+        createdAt:
+          type: string
+        mealMenu:
+          type: string
+      required:
+        - id
+        - pgName
+        - pgLocation
+        - availableMeals
+        - pickupTime
+        - status
+        - createdAt
+
+    ConfirmMealBody:
+      type: object
+      properties:
+        willEat:
+          type: boolean
+        mealDate:
+          type: string
+      required:
+        - willEat
+        - mealDate
+
+    MealConfirmation:
+      type: object
+      properties:
+        id:
+          type: integer
+        willEat:
+          type: boolean
+        mealDate:
+          type: string
+        message:
+          type: string
+      required:
+        - id
+        - willEat
+        - mealDate
+        - message
+
+    FeedbackBody:
+      type: object
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        mealDate:
+          type: string
+      required:
+        - rating
+        - mealDate
+
+    Feedback:
+      type: object
+      properties:
+        id:
+          type: integer
+        rating:
+          type: integer
+        comment:
+          type: string
+        mealDate:
+          type: string
+        message:
+          type: string
+      required:
+        - id
+        - rating
+        - mealDate
+        - message
+
+    OwnerStats:
+      type: object
+      properties:
+        totalMealsToday:
+          type: integer
+        predictedMeals:
+          type: integer
+        leftoverMeals:
+          type: integer
+        mealsServed:
+          type: integer
+      required:
+        - totalMealsToday
+        - predictedMeals
+        - leftoverMeals
+        - mealsServed
+
+    GreenScore:
+      type: object
+      properties:
+        score:
+          type: integer
+        mealsSavedToday:
+          type: integer
+        totalMealsSaved:
+          type: integer
+        message:
+          type: string
+      required:
+        - score
+        - mealsSavedToday
+        - totalMealsSaved
+        - message
+
+    DailyTrend:
+      type: object
+      properties:
+        date:
+          type: string
+        predicted:
+          type: integer
+        actual:
+          type: integer
+        leftover:
+          type: integer
+        wasteReduction:
+          type: number
+      required:
+        - date
+        - predicted
+        - actual
+        - leftover
+        - wasteReduction
