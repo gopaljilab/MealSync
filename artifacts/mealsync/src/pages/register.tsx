@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { useRegister, RegisterBodyRole } from "@workspace/api-client-react";
 import { toast } from "sonner";
+
+interface RegisteredPg {
+  id: number;
+  name: string;
+  pgName: string;
+}
 
 export default function Register() {
   const [, setLocation] = useLocation();
@@ -18,7 +24,24 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<RegisterBodyRole>("owner");
   const [pgName, setPgName] = useState("");
+  const [registeredPgs, setRegisteredPgs] = useState<RegisteredPg[]>([]);
+  const [pgsLoading, setPgsLoading] = useState(false);
   const [error, setError] = useState("");
+  const registrationDisabled =
+    registerMutation.isPending || (role === "resident" && (pgsLoading || registeredPgs.length === 0 || !pgName));
+
+  useEffect(() => {
+    setPgsLoading(true);
+    fetch("/api/pgs")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((pgs: RegisteredPg[]) => setRegisteredPgs(pgs))
+      .catch(() => setRegisteredPgs([]))
+      .finally(() => setPgsLoading(false));
+  }, []);
+
+  useEffect(() => {
+    setPgName("");
+  }, [role]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +53,7 @@ export default function Register() {
           email,
           password,
           role,
-          pgName: role === "owner" ? pgName : undefined,
+          pgName: role === "owner" || role === "resident" ? pgName : undefined,
         },
       });
       login(response.user);
@@ -112,6 +135,38 @@ export default function Register() {
                 />
               </div>
             )}
+            {role === "resident" && (
+              <div className="space-y-2">
+                <Label htmlFor="pgName">Select Your PG</Label>
+                <select
+                  id="pgName"
+                  required
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  value={pgName}
+                  onChange={(e) => setPgName(e.target.value)}
+                  disabled={pgsLoading || registeredPgs.length === 0}
+                  data-testid="select-resident-pg"
+                >
+                  <option value="">
+                    {pgsLoading
+                      ? "Loading registered PGs..."
+                      : registeredPgs.length === 0
+                        ? "No PGs registered yet"
+                        : "Choose a registered PG"}
+                  </option>
+                  {registeredPgs.map((pg) => (
+                    <option key={pg.id} value={pg.pgName}>
+                      {pg.pgName}
+                    </option>
+                  ))}
+                </select>
+                {registeredPgs.length === 0 && !pgsLoading && (
+                  <p className="text-xs text-muted-foreground">
+                    A PG Owner needs to register their PG before residents can join.
+                  </p>
+                )}
+              </div>
+            )}
             {error && (
               <p className="text-sm text-destructive" data-testid="text-register-error">{error}</p>
             )}
@@ -120,7 +175,7 @@ export default function Register() {
             <Button
               type="submit"
               className="w-full"
-              disabled={registerMutation.isPending}
+              disabled={registrationDisabled}
               data-testid="button-register"
             >
               {registerMutation.isPending ? "Creating account..." : "Register"}

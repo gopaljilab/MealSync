@@ -1,21 +1,75 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { RegisterBody, LoginBody } from "@workspace/api-zod";
 
 const router = Router();
+
+router.get("/pgs", async (_req, res) => {
+  const owners = await db
+    .select({
+      id: usersTable.id,
+      name: usersTable.name,
+      pgName: usersTable.pgName,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.role, "owner"));
+
+  return res.json(
+    owners
+      .filter((owner) => owner.pgName)
+      .map((owner) => ({
+        id: owner.id,
+        name: owner.name,
+        pgName: owner.pgName,
+      })),
+  );
+});
 
 router.post("/auth/register", async (req, res) => {
   const parse = RegisterBody.safeParse(req.body);
   if (!parse.success) {
     return res.status(400).json({ error: "Invalid input" });
   }
-  const { email, password, name, role, pgName } = parse.data;
+  const { email, password, name, role } = parse.data;
+  const pgName = parse.data.pgName?.trim();
 
   const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
   if (existing.length > 0) {
     return res.status(400).json({ error: "Email already registered" });
+  }
+
+  if (role === "owner") {
+    if (!pgName) {
+      return res.status(400).json({ error: "PG name is required" });
+    }
+
+    const existingPg = await db
+      .select()
+      .from(usersTable)
+      .where(and(eq(usersTable.role, "owner"), eq(usersTable.pgName, pgName)))
+      .limit(1);
+
+    if (existingPg.length > 0) {
+      return res.status(400).json({ error: "PG is already registered" });
+    }
+  }
+
+  if (role === "resident") {
+    if (!pgName) {
+      return res.status(400).json({ error: "Please select your PG" });
+    }
+
+    const [pgOwner] = await db
+      .select()
+      .from(usersTable)
+      .where(and(eq(usersTable.role, "owner"), eq(usersTable.pgName, pgName)))
+      .limit(1);
+
+    if (!pgOwner) {
+      return res.status(400).json({ error: "Selected PG is not registered" });
+    }
   }
 
   const [user] = await db
