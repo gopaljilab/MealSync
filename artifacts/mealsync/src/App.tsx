@@ -7,6 +7,7 @@ import { Layout } from "@/components/layout";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import LandingPage from "@/pages/landing";
 
 // Dashboard Pages
 import OwnerDashboard from "@/pages/dashboard/owner";
@@ -47,7 +48,7 @@ function RootRoute() {
     return <Redirect to={`/dashboard/${user.role}`} />;
   }
   
-  return <Redirect to="/login" />;
+  return <LandingPage />;
 }
 
 function Router() {
