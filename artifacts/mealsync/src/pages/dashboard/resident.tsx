@@ -245,8 +245,7 @@ export default function ResidentDashboard() {
           ) : todayMenu.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
               <div className="text-5xl mb-3">🍽️</div>
-              <p className="font-medium">Menu not announced yet</p>
-              <p className="text-sm mt-1">Check back closer to meal time.</p>
+              <p className="font-semibold text-lg text-slate-800 dark:text-slate-200">No meals available today</p>
             </div>
           ) : (
             <div className="space-y-3">

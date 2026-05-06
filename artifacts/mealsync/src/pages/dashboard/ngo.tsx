@@ -275,7 +275,7 @@ export default function NgoDashboard() {
             <Card className="border-dashed">
               <CardContent className="flex flex-col items-center justify-center p-14 text-center text-muted-foreground">
                 <div className="text-5xl mb-4">📭</div>
-                <p className="font-semibold">No pending requests</p>
+                <p className="font-semibold">No pickup requests available</p>
                 <p className="text-sm mt-1">PG owners will notify you when surplus is ready.</p>
               </CardContent>
             </Card>

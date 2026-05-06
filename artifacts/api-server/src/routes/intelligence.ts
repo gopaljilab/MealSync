@@ -125,19 +125,12 @@ router.get("/intelligence/suggestions", async (req, res) => {
 
   const suggestions: { type: "warning" | "tip" | "info"; message: string }[] = [];
 
-  const mockRainy = false;
   const weekend = isWeekend();
 
   if (weekend) {
     suggestions.push({
       type: "info",
       message: "Weekends typically see 15–20% lower attendance. Consider reducing portions.",
-    });
-  }
-  if (mockRainy) {
-    suggestions.push({
-      type: "info",
-      message: "Rainy weather usually increases indoor dining. Plan for 10% more servings.",
     });
   }
 
@@ -207,7 +200,7 @@ router.get("/intelligence/suggestions", async (req, res) => {
     ? "Prediction adjusted: weekend attendance expected lower."
     : "Prediction based on historical attendance trends.";
 
-  return res.json({ suggestions, weatherNote, weekend, rainy: mockRainy });
+  return res.json({ suggestions, weatherNote, weekend, rainy: false });
 });
 
 router.get("/intelligence/resident-impact", async (req, res) => {
