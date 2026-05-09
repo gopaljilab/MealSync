@@ -4,13 +4,19 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { useLogout, useHealthCheck, getHealthCheckQueryKey } from "@workspace/api-client-react";
 import { useDarkMode } from "@/hooks/useDarkMode";
+import { useState, useEffect } from "react";
+import { Menu, X, Moon, Sun, LayoutDashboard, LogOut } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const logoutMutation = useLogout();
   const { data: health } = useHealthCheck({ query: { queryKey: getHealthCheckQueryKey() } });
   const [dark, toggleDark] = useDarkMode();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const isLandingPage = location === "/";
 
   const handleLogout = async () => {
     try { await logoutMutation.mutateAsync(); } catch {}
@@ -18,48 +24,174 @@ export function Layout({ children }: { children: React.ReactNode }) {
     setLocation("/login");
   };
 
+  const smoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    if (!isLandingPage) return;
+    e.preventDefault();
+    const element = document.getElementById(targetId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+    setIsMenuOpen(false);
+  };
+
+  const navLinks = [
+    { name: "Home", href: "#home", id: "home" },
+    { name: "About", href: "#about", id: "about" },
+    { name: "Contact", href: "#contact", id: "contact" },
+  ];
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="font-bold text-xl text-primary tracking-tight">
-              MealSync
+    <div className={`min-h-screen flex flex-col ${dark ? 'dark' : ''}`}>
+      <header className="fixed top-0 w-full z-50 transition-all duration-300 glass border-b border-white/10">
+        <div className="container mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+                <span className="text-white font-bold text-xl">M</span>
+              </div>
+              <span className="font-bold text-2xl tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                MealSync
+              </span>
             </Link>
+            
             {health && (
-              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800">
+              <Badge variant="outline" className="hidden sm:flex text-[10px] uppercase tracking-widest bg-primary/10 text-primary border-primary/20">
                 API: {health.status}
               </Badge>
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-8">
+            {isLandingPage && navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                onClick={(e) => smoothScroll(e, link.id)}
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors relative group"
+              >
+                {link.name}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+              </a>
+            ))}
+            
+            <div className="h-6 w-[1px] bg-border mx-2"></div>
+            
             <button
               onClick={toggleDark}
-              aria-label="Toggle dark mode"
-              className="h-9 w-9 rounded-full flex items-center justify-center border border-border hover:bg-muted transition-colors text-lg"
+              className="p-2.5 rounded-xl border border-border hover:bg-muted transition-all hover:scale-105 active:scale-95"
+              aria-label="Toggle Theme"
             >
-              {dark ? "☀️" : "🌙"}
+              {dark ? <Sun size={18} className="text-yellow-500" /> : <Moon size={18} className="text-primary" />}
             </button>
 
-            {user && (
-              <>
-                <div className="hidden sm:flex items-center gap-2">
-                  <span className="text-sm font-medium">{user.name}</span>
-                  <Badge variant="secondary" className="capitalize">{user.role}</Badge>
+            {user ? (
+              <div className="flex items-center gap-4">
+                <div className="flex flex-col items-end">
+                  <span className="text-sm font-semibold">{user.name}</span>
+                  <span className="text-[10px] uppercase tracking-tighter text-muted-foreground">{user.role}</span>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleLogout} disabled={logoutMutation.isPending}>
-                  {logoutMutation.isPending ? "..." : "Logout"}
+                <Link href={`/dashboard/${user.role}`}>
+                  <Button size="sm" className="rounded-xl glow-primary gap-2">
+                    <LayoutDashboard size={16} />
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-xl hover:bg-destructive/10 hover:text-destructive transition-colors">
+                  <LogOut size={18} />
                 </Button>
-              </>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Link href="/login">
+                  <Button variant="ghost" className="rounded-xl px-6">Login</Button>
+                </Link>
+                <Link href="/register">
+                  <Button className="rounded-xl px-6 glow-primary">Get Started</Button>
+                </Link>
+              </div>
             )}
+          </nav>
+
+          {/* Mobile Menu Toggle */}
+          <div className="flex items-center gap-4 md:hidden">
+            <button
+              onClick={toggleDark}
+              className="p-2 rounded-lg border border-border"
+            >
+              {dark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 rounded-lg bg-muted text-foreground transition-colors"
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Nav Dropdown */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="md:hidden absolute top-full left-0 w-full glass border-b border-border p-6 space-y-6"
+            >
+              {isLandingPage && (
+                <div className="flex flex-col gap-4">
+                  {navLinks.map((link) => (
+                    <a
+                      key={link.name}
+                      href={link.href}
+                      onClick={(e) => smoothScroll(e, link.id)}
+                      className="text-lg font-medium py-2 border-b border-border/50"
+                    >
+                      {link.name}
+                    </a>
+                  ))}
+                </div>
+              )}
+              
+              <div className="flex flex-col gap-3">
+                {user ? (
+                  <>
+                    <Link href={`/dashboard/${user.role}`} onClick={() => setIsMenuOpen(false)}>
+                      <Button className="w-full justify-start gap-2 h-12 rounded-xl">
+                        <LayoutDashboard size={18} />
+                        Go to Dashboard
+                      </Button>
+                    </Link>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleLogout} 
+                      className="w-full justify-start gap-2 h-12 rounded-xl border-destructive/20 text-destructive"
+                    >
+                      <LogOut size={18} />
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                      <Button variant="outline" className="w-full h-12 rounded-xl">Login</Button>
+                    </Link>
+                    <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                      <Button className="w-full h-12 rounded-xl glow-primary">Get Started</Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1">
         {children}
       </main>
     </div>
   );
 }
+
