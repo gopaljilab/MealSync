@@ -1,4 +1,7 @@
-# MealSync - Smart Food Management System
+# MealSync
+
+<!-- Contribution Verification: 2026-05-13 -->
+- Smart Food Management System
 
 MealSync is a smart food management and redistribution platform for PGs, hostels, and shared living communities. It helps reduce food waste and food shortages by predicting meal demand, tracking consumption, and connecting surplus food with NGOs.
 
