@@ -4,9 +4,11 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { useLogout, useHealthCheck, getHealthCheckQueryKey } from "@workspace/api-client-react";
 import { useDarkMode } from "@/hooks/useDarkMode";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Menu, X, Moon, Sun, LayoutDashboard, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSmoothScroll } from "@/hooks/useSmoothScroll";
+import { gsap } from "@/animations/gsap";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
@@ -15,8 +17,43 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { data: health } = useHealthCheck({ query: { queryKey: getHealthCheckQueryKey() } });
   const [dark, toggleDark] = useDarkMode();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const isLandingPage = location === "/";
+  const lenis = useSmoothScroll();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrolled = window.scrollY > 20;
+      setIsScrolled(scrolled);
+      
+      if (headerRef.current) {
+        if (scrolled) {
+          gsap.to(headerRef.current, {
+            height: 70,
+            backgroundColor: dark ? 'rgba(9, 9, 11, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+            backdropFilter: 'blur(12px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            duration: 0.3,
+            ease: 'power2.out'
+          });
+        } else {
+          gsap.to(headerRef.current, {
+            height: 80,
+            backgroundColor: 'transparent',
+            backdropFilter: 'blur(0px)',
+            borderBottom: '1px solid transparent',
+            duration: 0.3,
+            ease: 'power2.out'
+          });
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [dark]);
 
   const handleLogout = async () => {
     try { await logoutMutation.mutateAsync(); } catch {}
@@ -27,9 +64,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const smoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     if (!isLandingPage) return;
     e.preventDefault();
-    const element = document.getElementById(targetId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+    
+    if (lenis) {
+      lenis.scrollTo(`#${targetId}`, {
+        offset: -100,
+        duration: 1.5,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      });
+    } else {
+      const element = document.getElementById(targetId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
     }
     setIsMenuOpen(false);
   };
@@ -42,8 +88,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={`min-h-screen flex flex-col ${dark ? 'dark' : ''}`}>
-      <header className="fixed top-0 w-full z-50 transition-all duration-300 glass border-b border-white/10">
-        <div className="container mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
+      <header 
+        ref={headerRef}
+        className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? '' : 'bg-transparent border-transparent'}`}
+      >
+        <div className="container mx-auto px-4 md:px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2 group">
               <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
