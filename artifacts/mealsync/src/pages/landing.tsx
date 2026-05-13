@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   ShieldCheck,
@@ -25,6 +25,9 @@ import {
 } from "lucide-react";
 import Hero3D from "@/components/Hero3D";
 import { useEffect, useState } from "react";
+import { initHeroAnimations } from "@/animations/heroAnimations";
+import { initScrollReveal } from "@/animations/scrollAnimations";
+import { initCounterAnimations } from "@/animations/counterAnimations";
 
 const ActivityTicker = () => {
   const activities = [
@@ -52,7 +55,7 @@ const ActivityTicker = () => {
 };
 
 const SocialProof = () => (
-  <div className="flex flex-col gap-4 mt-8">
+  <div className="flex flex-col gap-4 mt-8 hero-social">
     <div className="flex items-center gap-1">
       {[1, 2, 3, 4, 5].map((s) => (
         <Star key={s} size={16} className="fill-primary text-primary" />
@@ -75,11 +78,9 @@ const SocialProof = () => (
 const Sparkline = () => (
   <div className="flex items-end gap-1 h-8 w-24">
     {[40, 70, 45, 90, 65, 85, 100].map((h, i) => (
-      <motion.div
+      <div
         key={i}
-        initial={{ height: 0 }}
-        animate={{ height: `${h}%` }}
-        transition={{ delay: i * 0.1, duration: 1 }}
+        style={{ height: `${h}%` }}
         className="w-full bg-primary/40 rounded-t-sm"
       />
     ))}
@@ -87,112 +88,112 @@ const Sparkline = () => (
 );
 
 export default function LandingPage() {
-  const [mealsSaved, setMealsSaved] = useState(0);
-
   useEffect(() => {
-    const interval = setInterval(() => {
-      setMealsSaved((prev) => (prev < 12540 ? prev + 123 : 12540));
-    }, 50);
-    return () => clearInterval(interval);
+    // Small delay to ensure DOM is fully ready for GSAP
+    const timer = setTimeout(() => {
+      initHeroAnimations();
+      initScrollReveal();
+      initCounterAnimations();
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary selection:text-primary-foreground">
+      {/* Background Parallax Elements */}
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+        <div 
+          className="absolute top-[5%] left-[2%] w-72 h-72 bg-primary/10 blur-[100px] rounded-full parallax" 
+          data-parallax-speed="0.03"
+        />
+        <div 
+          className="absolute bottom-[15%] right-[5%] w-[400px] h-[400px] bg-blue-500/10 blur-[120px] rounded-full parallax" 
+          data-parallax-speed="0.05"
+        />
+      </div>
+
       {/* Hero Section */}
-      <section id="home" className="relative pt-32 pb-20 md:pt-48 md:pb-32 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 backdrop-blur-sm">
+      <section id="home" className="relative pt-24 pb-12 md:pt-32 md:pb-16 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-8 items-center">
+          <div className="z-10">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6 backdrop-blur-sm hero-badge">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_#10b981]" />
               <span className="text-xs font-black uppercase tracking-widest text-primary">Intelligent Ecosystem</span>
             </div>
             
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] mb-6 hero-title">
               Connecting <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-400 to-primary-foreground animate-gradient shadow-glow">Surplus</span> to Need.
             </h1>
             
-            <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed mb-10 max-w-xl font-medium">
+            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-8 max-w-xl font-medium hero-description">
               MealSync is an intelligent food optimization ecosystem connecting PGs and NGOs to eliminate waste through predictive analytics.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-5">
+            <div className="flex flex-col sm:flex-row gap-4 hero-buttons">
               <Link href="/register">
-                <Button size="lg" className="h-16 px-10 text-lg rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold glow-primary group">
+                <Button size="lg" className="h-14 px-8 text-lg rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold glow-primary group">
                   Get Started
                   <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Link href="/login">
-                <Button variant="outline" size="lg" className="h-16 px-10 text-lg rounded-2xl border-white/10 hover:bg-white/5 font-bold">
+                <Button variant="outline" size="lg" className="h-14 px-8 text-lg rounded-2xl border-white/10 hover:bg-white/5 font-bold">
                   Sign In
                 </Button>
               </Link>
             </div>
 
             <SocialProof />
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-            className="relative h-[400px] md:h-[600px] flex items-center justify-center"
-          >
+          <div className="relative h-[350px] md:h-[500px] flex items-center justify-center hero-3d">
             <Hero3D />
-          </motion.div>
+          </div>
         </div>
 
-        {/* Live Activity Ticker - Now integrated into Hero flow to avoid overlap */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          className="mt-20 -mx-4 md:-mx-8 lg:-mx-12"
-        >
+        <div className="mt-12 -mx-4 md:-mx-8 lg:-mx-12 reveal" data-reveal-direction="up" data-reveal-delay="0.3">
           <ActivityTicker />
-        </motion.div>
+        </div>
       </section>
 
       {/* Impact Stats */}
-      <section className="py-20 px-4 border-y border-white/5 bg-white/[0.02]">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+      <section className="py-12 px-4 border-y border-white/5 bg-white/[0.02]">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 stagger-reveal">
           {[
-            { label: "Meals Saved", value: mealsSaved.toLocaleString() + "+", icon: HeartHandshake },
-            { label: "Connected PGs", value: "500+", icon: Building2 },
-            { label: "Active NGOs", value: "120+", icon: Users },
-            { label: "Waste Reduced", value: "45%", icon: TrendingDown },
+            { label: "Meals Saved", value: "12540", suffix: "+", icon: HeartHandshake },
+            { label: "Connected PGs", value: "500", suffix: "+", icon: Building2 },
+            { label: "Active NGOs", value: "120", suffix: "+", icon: Users },
+            { label: "Waste Reduced", value: "45", suffix: "%", icon: TrendingDown },
           ].map((stat, i) => (
-            <motion.div 
+            <div 
               key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="text-center group p-6 rounded-3xl hover:bg-white/5 transition-all"
+              className="text-center group p-4 rounded-3xl hover:bg-white/5 transition-all"
             >
-              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <stat.icon className="text-primary" size={24} />
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                <stat.icon className="text-primary" size={20} />
               </div>
-              <div className="text-4xl md:text-5xl font-black mb-1 group-hover:text-primary transition-colors">{stat.value}</div>
-              <div className="text-xs uppercase tracking-widest font-bold text-muted-foreground">{stat.label}</div>
-            </motion.div>
+              <div 
+                className="text-3xl md:text-4xl font-black mb-1 group-hover:text-primary transition-colors counter"
+                data-target={stat.value}
+                data-suffix={stat.suffix}
+              >
+                0{stat.suffix}
+              </div>
+              <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">{stat.label}</div>
+            </div>
           ))}
         </div>
       </section>
 
       {/* Tailored for the Ecosystem */}
-      <section id="about" className="py-32 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-6xl font-black mb-6">Tailored for the Ecosystem</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">One platform, three powerful experiences built for impact.</p>
+      <section id="about" className="py-20 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-center mb-12 reveal" data-reveal-direction="up">
+          <h2 className="text-4xl md:text-5xl font-black mb-4">Tailored for the Ecosystem</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">One platform, three powerful experiences built for impact.</p>
         </div>
 
-        <Tabs defaultValue="pg-owners" className="w-full">
+        <Tabs defaultValue="pg-owners" className="w-full reveal" data-reveal-direction="scale">
           <TabsList className="flex justify-center mb-16 bg-transparent gap-4 md:gap-8 h-auto flex-wrap">
             {[
               { id: "pg-owners", label: "PG Owners", icon: Building2 },
@@ -213,7 +214,7 @@ export default function LandingPage() {
           <AnimatePresence mode="wait">
             <TabsContent value="pg-owners" className="animate-slide-up">
               <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div className="space-y-8">
+                <div className="space-y-8 reveal" data-reveal-direction="right">
                   <h3 className="text-4xl font-black leading-tight">Optimize kitchen efficiency <br /> & reduce overhead.</h3>
                   <p className="text-lg text-muted-foreground leading-relaxed">
                     MealSync intelligence predicts resident attendance and surplus availability, helping you save thousands on groceries every month.
@@ -233,9 +234,9 @@ export default function LandingPage() {
                     ))}
                   </ul>
                 </div>
-                <div className="relative group">
+                <div className="relative group reveal" data-reveal-direction="left">
                   <div className="absolute inset-0 bg-primary/20 blur-[80px] rounded-full group-hover:bg-primary/30 transition-all"></div>
-                  <Card className="glass overflow-hidden border-white/10 relative z-10 shadow-2xl rounded-[2rem]">
+                  <Card className="glass overflow-hidden border-white/10 relative z-10 shadow-2xl rounded-[2rem] floating-element">
                     <CardContent className="p-8">
                       <div className="flex justify-between items-center mb-8">
                         <div>
@@ -278,9 +279,9 @@ export default function LandingPage() {
 
             <TabsContent value="ngos" className="animate-slide-up">
               <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div className="relative order-2 md:order-1 group">
+                <div className="relative order-2 md:order-1 group reveal" data-reveal-direction="right">
                   <div className="absolute inset-0 bg-blue-500/20 blur-[80px] rounded-full group-hover:bg-blue-500/30 transition-all"></div>
-                  <Card className="glass overflow-hidden border-white/10 relative z-10 shadow-2xl rounded-[2rem]">
+                  <Card className="glass overflow-hidden border-white/10 relative z-10 shadow-2xl rounded-[2rem] floating-element">
                     <CardContent className="p-8">
                       <div className="flex justify-between items-center mb-8">
                         <div>
@@ -304,7 +305,7 @@ export default function LandingPage() {
                     </CardContent>
                   </Card>
                 </div>
-                <div className="space-y-8 order-1 md:order-2">
+                <div className="space-y-8 order-1 md:order-2 reveal" data-reveal-direction="left">
                   <h3 className="text-4xl font-black leading-tight">Scale your redistribution <br /> with real-time data.</h3>
                   <p className="text-lg text-muted-foreground leading-relaxed">
                     Stop guessing where the surplus is. MealSync connects you directly to PG kitchens the moment extra food is identified.
@@ -329,7 +330,7 @@ export default function LandingPage() {
 
             <TabsContent value="residents" className="animate-slide-up">
               <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div className="space-y-8">
+                <div className="space-y-8 reveal" data-reveal-direction="right">
                   <h3 className="text-4xl font-black leading-tight">Your choices, <br /> global impact.</h3>
                   <p className="text-lg text-muted-foreground leading-relaxed">
                     Personalize your meal preferences and see how your conscious choices contribute to a zero-waste community.
@@ -349,9 +350,9 @@ export default function LandingPage() {
                     ))}
                   </ul>
                 </div>
-                <div className="relative group">
+                <div className="relative group reveal" data-reveal-direction="left">
                   <div className="absolute inset-0 bg-emerald-500/20 blur-[80px] rounded-full group-hover:bg-emerald-500/30 transition-all"></div>
-                  <Card className="glass overflow-hidden border-white/10 relative z-10 shadow-2xl rounded-[2rem]">
+                  <Card className="glass overflow-hidden border-white/10 relative z-10 shadow-2xl rounded-[2rem] floating-element">
                     <CardContent className="p-8">
                       <div className="flex items-center gap-4 mb-6">
                         <div className="w-16 h-16 rounded-full border-4 border-emerald-500/30 overflow-hidden">
@@ -382,7 +383,7 @@ export default function LandingPage() {
       </section>
 
       {/* Dashboard Preview Section */}
-      <section className="py-24 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
+      <section className="py-24 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden reveal" data-reveal-direction="up">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-black mb-4 tracking-tighter">Intelligent <span className="text-primary">Ecosystem</span> Visualization</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Real-time data flow connecting donors, redistributors, and communities.</p>
@@ -397,47 +398,34 @@ export default function LandingPage() {
           </svg>
 
           {/* Nodes */}
-          <div className="grid grid-cols-3 gap-24 relative z-10 w-full max-w-4xl">
-            <motion.div 
-              whileHover={{ scale: 1.1 }}
-              className="flex flex-col items-center gap-4"
-            >
+          <div className="grid grid-cols-3 gap-24 relative z-10 w-full max-w-4xl stagger-reveal">
+            <div className="flex flex-col items-center gap-4 hover:scale-110 transition-transform cursor-pointer">
               <div className="w-24 h-24 rounded-3xl bg-primary/10 border-2 border-primary/30 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.2)]">
                 <Building2 size={40} className="text-primary" />
               </div>
               <span className="text-sm font-black uppercase tracking-widest">PG Surplus</span>
-            </motion.div>
+            </div>
 
-            <motion.div 
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="flex flex-col items-center gap-4"
-            >
+            <div className="flex flex-col items-center gap-4 animate-float">
               <div className="w-32 h-32 rounded-[2.5rem] bg-primary text-primary-foreground flex items-center justify-center shadow-[0_0_50px_rgba(16,185,129,0.4)]">
                 <Zap size={56} />
               </div>
               <span className="text-base font-black uppercase tracking-widest text-primary">MealSync AI</span>
-            </motion.div>
+            </div>
 
-            <motion.div 
-              whileHover={{ scale: 1.1 }}
-              className="flex flex-col items-center gap-4"
-            >
+            <div className="flex flex-col items-center gap-4 hover:scale-110 transition-transform cursor-pointer">
               <div className="w-24 h-24 rounded-3xl bg-blue-500/10 border-2 border-blue-500/30 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.2)]">
                 <Users size={40} className="text-blue-400" />
               </div>
               <span className="text-sm font-black uppercase tracking-widest text-blue-400">NGO Network</span>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section id="contact" className="py-32 px-4 md:px-6 lg:px-8 max-w-5xl mx-auto text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+      <section id="contact" className="py-32 px-4 md:px-6 lg:px-8 max-w-5xl mx-auto text-center reveal" data-reveal-direction="up">
+        <div
           className="relative glass border-white/10 p-12 md:p-20 rounded-[3rem] overflow-hidden group"
         >
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/10 blur-[100px] group-hover:scale-125 transition-transform duration-700"></div>
@@ -459,11 +447,11 @@ export default function LandingPage() {
               </Button>
             </Link>
           </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-20 px-4 md:px-6 border-t border-white/5 bg-white/[0.01]">
+      <footer className="py-20 px-4 md:px-6 border-t border-white/5 bg-white/[0.01] reveal" data-reveal-direction="up">
         <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-12">
           <div className="col-span-2">
             <div className="flex items-center gap-3 mb-6">
