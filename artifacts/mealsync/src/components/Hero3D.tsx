@@ -10,8 +10,9 @@ import {
   Html,
   useProgress
 } from "@react-three/drei";
-import { useRef, Suspense } from "react";
+import { useRef, Suspense, useEffect } from "react";
 import * as THREE from "three";
+import { gsap, ScrollTrigger } from "@/animations/gsap";
 
 function Loader() {
   const { progress } = useProgress();
@@ -56,15 +57,14 @@ function FoodContainerModel() {
     <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
       <primitive 
         object={fbx} 
-        scale={0.08} // Increased scale significantly
+        scale={0.08} 
         ref={groupRef}
-        position={[0, -1, 0]} // Center it slightly lower
+        position={[0, -1, 0]} 
         rotation={[0, Math.PI / 4, 0]}
       />
     </Float>
   );
 }
-
 
 function Ecosystem() {
   return (
@@ -73,7 +73,7 @@ function Ecosystem() {
       
       {/* Floating Labels */}
       <Text
-        position={[2, 1, 0]}
+        position={[2.5, 1, 0]}
         fontSize={0.25}
         color="#10b981"
         font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf"
@@ -81,7 +81,7 @@ function Ecosystem() {
         Surplus
       </Text>
       <Text
-        position={[-2, -1, 0]}
+        position={[-2.5, -1, 0]}
         fontSize={0.25}
         color="#3b82f6"
       >
@@ -106,8 +106,37 @@ function Ecosystem() {
 }
 
 export default function Hero3D() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    // Parallax effect on scroll
+    gsap.to(containerRef.current, {
+      y: 50,
+      rotateX: 5,
+      scale: 0.98,
+      ease: "none",
+      scrollTrigger: {
+        trigger: containerRef.current,
+        start: "top center",
+        end: "bottom top",
+        scrub: true,
+      }
+    });
+
+    // Floating animation for the whole container
+    gsap.to(containerRef.current, {
+      y: "-=20",
+      duration: 3,
+      repeat: -1,
+      yoyo: true,
+      ease: "power1.inOut"
+    });
+  }, []);
+
   return (
-    <div className="w-full h-[400px] md:h-[600px] relative">
+    <div ref={containerRef} className="w-full h-[400px] md:h-[600px] relative">
       <Canvas shadows dpr={[1, 2]}>
         <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={40} />
         <Suspense fallback={<Loader />}>
@@ -124,7 +153,7 @@ export default function Hero3D() {
       </Canvas>
       
       {/* Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/20 blur-[100px] rounded-full -z-10" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/20 blur-[100px] rounded-full -z-10 animate-pulse" />
     </div>
   );
 }
