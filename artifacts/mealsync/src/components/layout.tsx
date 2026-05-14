@@ -90,7 +90,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className={`min-h-screen flex flex-col ${dark ? 'dark' : ''}`}>
       <header 
         ref={headerRef}
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? '' : 'bg-transparent border-transparent'}`}
+        className="fixed top-0 w-full z-50 bg-transparent border-transparent"
       >
         <div className="container mx-auto px-4 md:px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-6">
@@ -103,11 +103,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </span>
             </Link>
             
-            {health && (
-              <Badge variant="outline" className="hidden sm:flex text-[10px] uppercase tracking-widest bg-primary/10 text-primary border-primary/20">
-                API: {health.status}
-              </Badge>
-            )}
+            <div className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-full glass border border-primary/20 backdrop-blur-md shadow-sm">
+              <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse" />
+              <div className="text-xs uppercase tracking-widest font-black text-primary w-[200px] overflow-hidden relative h-[18px]">
+                <div className="absolute inset-0 flex flex-col animate-[badgeRotate_10s_cubic-bezier(0.83,0,0.17,1)_infinite]">
+                  <span className="h-[18px] flex items-center leading-none">1,200+ Meals Saved</span>
+                  <span className="h-[18px] flex items-center leading-none">Live Connections Active</span>
+                  <span className="h-[18px] flex items-center leading-none">45+ NGOs Connected</span>
+                  <span className="h-[18px] flex items-center leading-none">1,200+ Meals Saved</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Desktop Nav */}
@@ -146,7 +152,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     Dashboard
                   </Button>
                 </Link>
-                <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-xl hover:bg-destructive/10 hover:text-destructive transition-colors">
+                <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-xl hover:bg-destructive/10 hover:text-destructive transition-colors" aria-label="Logout">
                   <LogOut size={18} />
                 </Button>
               </div>
@@ -167,12 +173,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <button
               onClick={toggleDark}
               className="p-2 rounded-lg border border-border"
+              aria-label="Toggle Theme"
             >
               {dark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 rounded-lg bg-muted text-foreground transition-colors"
+              aria-label="Toggle Mobile Menu"
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>

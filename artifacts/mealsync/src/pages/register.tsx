@@ -19,7 +19,9 @@ import {
   Building,
   Mail,
   Lock,
-  Loader2
+  Loader2,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 interface RegisteredPg {
@@ -42,6 +44,9 @@ export default function Register() {
   const [registeredPgs, setRegisteredPgs] = useState<RegisteredPg[]>([]);
   const [pgsLoading, setPgsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const isEmailValid = email === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const registrationDisabled =
     registerMutation.isPending || (role === "resident" && (pgsLoading || registeredPgs.length === 0 || !pgName));
@@ -102,31 +107,34 @@ export default function Register() {
 
   const RoleCard = ({ type, icon: Icon, title, desc }: { type: RegisterBodyRole, icon: any, title: string, desc: string }) => (
     <motion.div
-      whileHover={{ y: -5, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ y: -8, scale: 1.03 }}
+      whileTap={{ scale: 0.95 }}
       onClick={() => {
         setRole(type);
         setStep(2);
       }}
-      className={`relative p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+      className={`relative p-6 rounded-3xl border-2 cursor-pointer transition-all duration-300 overflow-hidden group ${
         role === type 
-          ? "border-primary bg-primary/5 shadow-[0_0_20px_rgba(16,185,129,0.1)]" 
-          : "border-white/10 bg-white/5 hover:border-primary/50"
+          ? "border-primary bg-primary/10 shadow-[0_0_30px_rgba(16,185,129,0.2)]" 
+          : "border-white/10 glass hover:border-primary/50 hover:bg-white/5"
       }`}
     >
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
-        role === type ? "bg-primary text-primary-foreground" : "bg-white/10 text-muted-foreground"
+      <div className={`absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-0 transition-opacity duration-500 pointer-events-none ${role === type ? 'opacity-100' : 'group-hover:opacity-50'}`} />
+      
+      <div className={`relative z-10 w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-colors ${
+        role === type ? "bg-primary text-primary-foreground shadow-[0_0_20px_rgba(16,185,129,0.4)]" : "bg-white/10 text-muted-foreground group-hover:text-primary group-hover:bg-primary/20"
       }`}>
-        <Icon size={24} />
+        <Icon size={28} />
       </div>
-      <h3 className="text-lg font-bold mb-1">{title}</h3>
-      <p className="text-sm text-muted-foreground leading-tight">{desc}</p>
+      <h3 className="relative z-10 text-xl font-black mb-2">{title}</h3>
+      <p className="relative z-10 text-sm text-muted-foreground leading-relaxed">{desc}</p>
+      
       {role === type && (
         <motion.div 
           layoutId="role-check"
-          className="absolute top-4 right-4 text-primary"
+          className="absolute top-6 right-6 text-primary z-10 bg-primary/20 rounded-full p-1 backdrop-blur-sm"
         >
-          <CheckCircle2 size={20} />
+          <CheckCircle2 size={24} className="animate-pulse" />
         </motion.div>
       )}
     </motion.div>
@@ -136,17 +144,28 @@ export default function Register() {
     <div className="flex items-center justify-center min-h-[90vh] px-4 pt-20">
       <div className="w-full max-w-2xl">
         {/* Progress Indicator */}
-        <div className="mb-12 flex justify-center items-center gap-4">
-          {[1, 2, 3].map((s) => (
-            <div key={s} className="flex items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-500 ${
-                step >= s ? "bg-primary text-primary-foreground scale-110 shadow-lg glow-primary" : "bg-white/10 text-muted-foreground"
-              }`}>
-                {step > s ? <CheckCircle2 size={20} /> : s}
+        <div className="mb-12 flex justify-center items-center max-w-lg mx-auto">
+          {[
+            { id: 1, label: "Role" },
+            { id: 2, label: "Details" },
+            { id: 3, label: "Verify" }
+          ].map((s, i) => (
+            <div key={s.id} className="flex items-center flex-1 last:flex-none">
+              <div className="flex flex-col items-center gap-2 relative z-10">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-500 border-2 ${
+                  step >= s.id ? "bg-primary border-primary text-primary-foreground scale-110 shadow-[0_0_15px_rgba(16,185,129,0.4)]" : "bg-white/5 border-white/10 text-muted-foreground"
+                }`}>
+                  {step > s.id ? <CheckCircle2 size={20} /> : s.id}
+                </div>
+                <span className={`text-xs font-bold uppercase tracking-widest absolute -bottom-6 whitespace-nowrap transition-colors ${
+                  step >= s.id ? "text-primary" : "text-muted-foreground"
+                }`}>
+                  {s.label}
+                </span>
               </div>
-              {s < 3 && (
-                <div className={`w-20 h-1 mx-2 rounded-full transition-all duration-500 ${
-                  step > s ? "bg-primary" : "bg-white/10"
+              {i < 2 && (
+                <div className={`flex-1 h-1 mx-2 rounded-full transition-all duration-500 ${
+                  step > s.id ? "bg-primary shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-white/10"
                 }`} />
               )}
             </div>
@@ -205,45 +224,60 @@ export default function Register() {
                   <CardDescription>Enter your credentials to get started</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-6">
-                  <div className="space-y-2">
-                    <Label className="text-xs uppercase tracking-widest font-bold text-muted-foreground">Full Name</Label>
+                  <div className="space-y-4">
                     <div className="relative group">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                      <User className="absolute left-4 top-4 text-muted-foreground group-focus-within:text-primary transition-colors z-10" size={18} />
                       <Input
                         required
-                        className="h-12 pl-12 bg-white/5 border-white/10 focus-glow transition-all"
-                        placeholder="John Doe"
+                        id="name"
+                        className="h-14 pl-12 pt-4 bg-white/5 border-white/10 focus-glow transition-all peer"
+                        placeholder=" "
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                       />
+                      <Label htmlFor="name" className="absolute left-12 top-4 text-sm text-muted-foreground transition-all peer-focus:-translate-y-3 peer-focus:text-[10px] peer-focus:text-primary peer-focus:font-bold peer-placeholder-shown:translate-y-0 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-[:not(:placeholder-shown)]:-translate-y-3 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-bold pointer-events-none uppercase tracking-widest">
+                        Full Name
+                      </Label>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs uppercase tracking-widest font-bold text-muted-foreground">Email Address</Label>
+
                     <div className="relative group">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                      <Mail className={`absolute left-4 top-4 transition-colors z-10 ${email && !isEmailValid ? 'text-destructive' : email && isEmailValid ? 'text-primary' : 'text-muted-foreground group-focus-within:text-primary'}`} size={18} />
                       <Input
                         type="email"
                         required
-                        className="h-12 pl-12 bg-white/5 border-white/10 focus-glow transition-all"
-                        placeholder="john@example.com"
+                        id="email"
+                        className={`h-14 pl-12 pt-4 bg-white/5 border-white/10 focus-glow transition-all peer ${email && !isEmailValid ? '!border-destructive focus-within:!shadow-[0_0_0_2px_rgba(239,68,68,0.4)]' : ''}`}
+                        placeholder=" "
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                       />
+                      <Label htmlFor="email" className={`absolute left-12 top-4 text-sm transition-all peer-focus:-translate-y-3 peer-focus:text-[10px] peer-focus:font-bold peer-placeholder-shown:translate-y-0 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-[:not(:placeholder-shown)]:-translate-y-3 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-bold pointer-events-none uppercase tracking-widest ${email && !isEmailValid ? 'text-destructive' : email && isEmailValid ? 'text-primary' : 'text-muted-foreground peer-focus:text-primary'}`}>
+                        Email Address
+                      </Label>
+                      {email && isEmailValid && <CheckCircle2 className="absolute right-4 top-4 text-primary" size={18} />}
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs uppercase tracking-widest font-bold text-muted-foreground">Password</Label>
+
                     <div className="relative group">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                      <Lock className="absolute left-4 top-4 text-muted-foreground group-focus-within:text-primary transition-colors z-10" size={18} />
                       <Input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         required
-                        className="h-12 pl-12 bg-white/5 border-white/10 focus-glow transition-all"
-                        placeholder="••••••••"
+                        id="password"
+                        className="h-14 pl-12 pr-12 pt-4 bg-white/5 border-white/10 focus-glow transition-all peer"
+                        placeholder=" "
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                       />
+                      <Label htmlFor="password" className="absolute left-12 top-4 text-sm text-muted-foreground transition-all peer-focus:-translate-y-3 peer-focus:text-[10px] peer-focus:text-primary peer-focus:font-bold peer-placeholder-shown:translate-y-0 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-[:not(:placeholder-shown)]:-translate-y-3 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-bold pointer-events-none uppercase tracking-widest">
+                        Password
+                      </Label>
+                      <button 
+                        type="button" 
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-4 text-muted-foreground hover:text-foreground transition-colors z-10"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
                     </div>
                     {password && (
                       <div className="pt-2">

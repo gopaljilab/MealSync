@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useLogin } from "@workspace/api-client-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Mail, Lock, Loader2, Wand2, ArrowRight } from "lucide-react";
+import { Mail, Lock, Loader2, Wand2, ArrowRight, Eye, EyeOff, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -19,6 +19,9 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isMagicLinkLoading, setIsMagicLinkLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const isEmailValid = email === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   useEffect(() => {
     if (user) {
@@ -65,49 +68,66 @@ export default function Login() {
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-6 pt-6">
-              <div className="space-y-2">
-                <Label className="text-xs uppercase tracking-widest font-bold text-muted-foreground">Email Address</Label>
+              <div className="space-y-4">
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                  <Mail className={`absolute left-4 top-4 transition-colors z-10 ${email && !isEmailValid ? 'text-destructive' : email && isEmailValid ? 'text-primary' : 'text-muted-foreground group-focus-within:text-primary'}`} size={18} />
                   <Input
                     id="email"
                     type="email"
                     required
                     autoComplete="email"
-                    className="h-12 pl-12 bg-white/5 border-white/10 focus-glow transition-all"
-                    placeholder="name@example.com"
+                    className={`h-14 pl-12 pt-4 bg-white/5 border-white/10 focus-glow transition-all peer ${email && !isEmailValid ? '!border-destructive focus-within:!shadow-[0_0_0_2px_rgba(239,68,68,0.4)]' : ''}`}
+                    placeholder=" "
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    disabled={loginMutation.isPending}
                   />
+                  <Label htmlFor="email" className={`absolute left-12 top-4 text-sm transition-all peer-focus:-translate-y-3 peer-focus:text-[10px] peer-focus:font-bold peer-placeholder-shown:translate-y-0 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-[:not(:placeholder-shown)]:-translate-y-3 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-bold pointer-events-none uppercase tracking-widest ${email && !isEmailValid ? 'text-destructive' : email && isEmailValid ? 'text-primary' : 'text-muted-foreground peer-focus:text-primary'}`}>
+                    Email Address
+                  </Label>
+                  {email && isEmailValid && <CheckCircle2 className="absolute right-4 top-4 text-primary" size={18} />}
                 </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label className="text-xs uppercase tracking-widest font-bold text-muted-foreground">Password</Label>
-                  <Link href="/forgot-password" title="Forgot Password" className="text-[10px] uppercase font-bold text-primary hover:underline">Forgot?</Link>
-                </div>
+
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                  <Lock className="absolute left-4 top-4 text-muted-foreground group-focus-within:text-primary transition-colors z-10" size={18} />
                   <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     autoComplete="current-password"
-                    className="h-12 pl-12 bg-white/5 border-white/10 focus-glow transition-all"
-                    placeholder="••••••••"
+                    className="h-14 pl-12 pr-12 pt-4 bg-white/5 border-white/10 focus-glow transition-all peer"
+                    placeholder=" "
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    disabled={loginMutation.isPending}
                   />
+                  <Label htmlFor="password" className="absolute left-12 top-4 text-sm text-muted-foreground transition-all peer-focus:-translate-y-3 peer-focus:text-[10px] peer-focus:text-primary peer-focus:font-bold peer-placeholder-shown:translate-y-0 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-[:not(:placeholder-shown)]:-translate-y-3 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-bold pointer-events-none uppercase tracking-widest">
+                    Password
+                  </Label>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-4 text-muted-foreground hover:text-foreground transition-colors z-10"
+                    disabled={loginMutation.isPending}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Link href="/forgot-password" title="Forgot Password" className="text-[10px] uppercase font-bold text-primary hover:underline hover:text-primary/80 transition-colors">Forgot Password?</Link>
                 </div>
               </div>
+
               {error && (
-                <motion.p 
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  className="text-sm text-destructive font-bold text-center"
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center gap-3"
                 >
-                  {error}
-                </motion.p>
+                  <AlertCircle className="text-destructive shrink-0" size={18} />
+                  <p className="text-sm text-destructive font-bold">{error}</p>
+                </motion.div>
               )}
             </CardContent>
             <CardFooter className="flex flex-col gap-4 pt-2">

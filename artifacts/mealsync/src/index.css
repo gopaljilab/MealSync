@@ -184,6 +184,22 @@
     @apply bg-white/60 dark:bg-black/40 backdrop-blur-xl border border-white/20 dark:border-white/10;
   }
 
+  .glass-premium {
+    @apply bg-white/70 dark:bg-zinc-950/60 backdrop-blur-2xl border border-white/30 dark:border-white/10 shadow-2xl;
+  }
+
+  .section-spacing {
+    @apply py-24 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto;
+  }
+
+  .heading-gradient {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-400 to-primary-foreground;
+  }
+
+  .neon-border {
+    @apply border border-primary/50 shadow-[0_0_15px_rgba(16,185,129,0.3)];
+  }
+
   .text-glow {
     text-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
   }
@@ -198,6 +214,13 @@
   @keyframes scroll {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
+  }
+
+  @keyframes badgeRotate {
+    0%, 25% { transform: translateY(0); }
+    33%, 58% { transform: translateY(-25%); }
+    66%, 91% { transform: translateY(-50%); }
+    100% { transform: translateY(-75%); }
   }
 
   .animate-scroll {
@@ -285,5 +308,26 @@
 
 .animate-fade-in {
   animation: fade-in 0.8s ease-out forwards;
+}
+
+/* Reduced Motion Fallback */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-float,
+  .animate-scroll,
+  .animate-dash,
+  .animate-slide-up,
+  .animate-fade-in {
+    animation: none !important;
+    transform: none !important;
+  }
 }
 

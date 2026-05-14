@@ -41,12 +41,15 @@ const ActivityTicker = () => {
   ];
 
   return (
-    <div className="w-full bg-primary/10 backdrop-blur-md border-y border-white/5 py-3 overflow-hidden whitespace-nowrap relative z-10">
-      <div className="flex animate-scroll items-center gap-12 px-4">
+    <div className="w-full overflow-hidden whitespace-nowrap relative z-10 py-4">
+      <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-background to-transparent z-20" />
+      <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-background to-transparent z-20" />
+      
+      <div className="flex animate-scroll items-center gap-6 px-4 hover:[animation-play-state:paused]">
         {[...activities, ...activities].map((text, i) => (
-          <div key={i} className="flex items-center gap-3">
+          <div key={i} className="flex items-center gap-3 px-5 py-2.5 rounded-full glass border border-primary/20 shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:border-primary/50 transition-colors cursor-default">
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_#10b981]" />
-            <span className="text-sm font-bold tracking-wide uppercase text-primary/80">{text}</span>
+            <span className="text-sm font-medium tracking-wide text-foreground/90">{text}</span>
           </div>
         ))}
       </div>
@@ -130,21 +133,51 @@ export default function LandingPage() {
               MealSync is an intelligent food optimization ecosystem connecting PGs and NGOs to eliminate waste through predictive analytics.
             </p>
 
+            <div className="mt-8 mb-8">
+              <SocialProof />
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-4 hero-buttons">
               <Link href="/register">
-                <Button size="lg" className="h-14 px-8 text-lg rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold glow-primary group">
-                  Get Started
+                <Button size="lg" className="h-14 px-8 text-lg rounded-2xl bg-primary hover:bg-primary/90 hover:-translate-y-1 transition-all text-primary-foreground font-bold glow-primary group">
+                  Start Saving Meals
                   <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Link href="/login">
-                <Button variant="outline" size="lg" className="h-14 px-8 text-lg rounded-2xl border-white/10 hover:bg-white/5 font-bold">
+                <Button variant="outline" size="lg" className="h-14 px-8 text-lg rounded-2xl border-white/20 hover:bg-white/10 backdrop-blur-md transition-all font-bold">
                   Sign In
                 </Button>
               </Link>
             </div>
 
-            <SocialProof />
+            <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 stagger-reveal">
+              {[
+                { label: "Meals Saved", value: "12540", suffix: "+", icon: HeartHandshake },
+                { label: "Waste Reduced", value: "45", suffix: "%", icon: TrendingDown },
+                { label: "Active NGOs", value: "120", suffix: "+", icon: Users },
+                { label: "Communities", value: "500", suffix: "+", icon: Building2 },
+              ].map((stat, i) => (
+                <div 
+                  key={i}
+                  className="flex flex-col p-3 rounded-2xl glass-premium hover:border-primary/40 transition-all group"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                      <stat.icon className="text-primary" size={16} />
+                    </div>
+                    <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">{stat.label}</div>
+                  </div>
+                  <div 
+                    className="text-2xl font-black group-hover:text-primary transition-colors counter"
+                    data-target={stat.value}
+                    data-suffix={stat.suffix}
+                  >
+                    0{stat.suffix}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="relative h-[350px] md:h-[500px] flex items-center justify-center hero-3d">
@@ -157,34 +190,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Impact Stats */}
-      <section className="py-12 px-4 border-y border-white/5 bg-white/[0.02]">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 stagger-reveal">
-          {[
-            { label: "Meals Saved", value: "12540", suffix: "+", icon: HeartHandshake },
-            { label: "Connected PGs", value: "500", suffix: "+", icon: Building2 },
-            { label: "Active NGOs", value: "120", suffix: "+", icon: Users },
-            { label: "Waste Reduced", value: "45", suffix: "%", icon: TrendingDown },
-          ].map((stat, i) => (
-            <div 
-              key={i}
-              className="text-center group p-4 rounded-3xl hover:bg-white/5 transition-all"
-            >
-              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                <stat.icon className="text-primary" size={20} />
-              </div>
-              <div 
-                className="text-3xl md:text-4xl font-black mb-1 group-hover:text-primary transition-colors counter"
-                data-target={stat.value}
-                data-suffix={stat.suffix}
-              >
-                0{stat.suffix}
-              </div>
-              <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* Removed separate Impact Stats section as it was integrated into the Hero */}
 
       {/* Tailored for the Ecosystem */}
       <section id="about" className="py-20 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -236,7 +242,7 @@ export default function LandingPage() {
                 </div>
                 <div className="relative group reveal" data-reveal-direction="left">
                   <div className="absolute inset-0 bg-primary/20 blur-[80px] rounded-full group-hover:bg-primary/30 transition-all"></div>
-                  <Card className="glass overflow-hidden border-white/10 relative z-10 shadow-2xl rounded-[2rem] floating-element">
+                  <Card className="glass-premium neon-border overflow-hidden relative z-10 shadow-2xl rounded-[2rem] floating-element">
                     <CardContent className="p-8">
                       <div className="flex justify-between items-center mb-8">
                         <div>
@@ -281,7 +287,7 @@ export default function LandingPage() {
               <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div className="relative order-2 md:order-1 group reveal" data-reveal-direction="right">
                   <div className="absolute inset-0 bg-blue-500/20 blur-[80px] rounded-full group-hover:bg-blue-500/30 transition-all"></div>
-                  <Card className="glass overflow-hidden border-white/10 relative z-10 shadow-2xl rounded-[2rem] floating-element">
+                  <Card className="glass-premium border-blue-500/30 overflow-hidden relative z-10 shadow-2xl rounded-[2rem] floating-element shadow-[0_0_20px_rgba(59,130,246,0.1)]">
                     <CardContent className="p-8">
                       <div className="flex justify-between items-center mb-8">
                         <div>
@@ -352,7 +358,7 @@ export default function LandingPage() {
                 </div>
                 <div className="relative group reveal" data-reveal-direction="left">
                   <div className="absolute inset-0 bg-emerald-500/20 blur-[80px] rounded-full group-hover:bg-emerald-500/30 transition-all"></div>
-                  <Card className="glass overflow-hidden border-white/10 relative z-10 shadow-2xl rounded-[2rem] floating-element">
+                  <Card className="glass-premium neon-border overflow-hidden relative z-10 shadow-2xl rounded-[2rem] floating-element">
                     <CardContent className="p-8">
                       <div className="flex items-center gap-4 mb-6">
                         <div className="w-16 h-16 rounded-full border-4 border-emerald-500/30 overflow-hidden">
@@ -389,33 +395,42 @@ export default function LandingPage() {
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Real-time data flow connecting donors, redistributors, and communities.</p>
         </div>
 
-        <div className="relative h-[500px] w-full flex items-center justify-center">
-          {/* Animated Connection Lines */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30" viewBox="0 0 1000 500">
-            <path d="M200,250 Q500,50 800,250" fill="none" stroke="#10b981" strokeWidth="2" className="animate-dash" />
-            <path d="M200,250 Q500,450 800,250" fill="none" stroke="#10b981" strokeWidth="2" className="animate-dash" style={{ animationDelay: '1s' }} />
-            <path d="M200,250 L800,250" fill="none" stroke="#10b981" strokeWidth="2" className="animate-dash" style={{ animationDelay: '2s' }} />
+        <div className="relative h-[500px] w-full flex items-center justify-center mt-12">
+          {/* Animated Connection Lines with Glow */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-60" viewBox="0 0 1000 500">
+            <defs>
+              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="5" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <path d="M250,250 Q500,100 750,250" fill="none" stroke="#10b981" strokeWidth="3" filter="url(#glow)" className="animate-dash opacity-50" />
+            <path d="M250,250 Q500,400 750,250" fill="none" stroke="#3b82f6" strokeWidth="3" filter="url(#glow)" className="animate-dash opacity-50" style={{ animationDelay: '1s' }} />
+            <path d="M250,250 L750,250" fill="none" stroke="#10b981" strokeWidth="2" filter="url(#glow)" className="animate-dash" style={{ animationDelay: '2s' }} />
           </svg>
 
           {/* Nodes */}
-          <div className="grid grid-cols-3 gap-24 relative z-10 w-full max-w-4xl stagger-reveal">
-            <div className="flex flex-col items-center gap-4 hover:scale-110 transition-transform cursor-pointer">
-              <div className="w-24 h-24 rounded-3xl bg-primary/10 border-2 border-primary/30 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-                <Building2 size={40} className="text-primary" />
+          <div className="grid grid-cols-3 gap-12 md:gap-24 relative z-10 w-full max-w-4xl stagger-reveal">
+            <div className="flex flex-col items-center gap-4 hover:-translate-y-2 transition-transform cursor-pointer group">
+              <div className="w-24 h-24 rounded-3xl glass-premium neon-border flex items-center justify-center group-hover:shadow-[0_0_40px_rgba(16,185,129,0.4)] transition-all">
+                <Building2 size={40} className="text-primary animate-pulse" />
               </div>
-              <span className="text-sm font-black uppercase tracking-widest">PG Surplus</span>
+              <span className="text-sm font-black uppercase tracking-widest text-foreground/80">PG Surplus</span>
             </div>
 
             <div className="flex flex-col items-center gap-4 animate-float">
-              <div className="w-32 h-32 rounded-[2.5rem] bg-primary text-primary-foreground flex items-center justify-center shadow-[0_0_50px_rgba(16,185,129,0.4)]">
-                <Zap size={56} />
+              <div className="w-32 h-32 rounded-[2.5rem] bg-gradient-to-br from-primary to-emerald-600 text-primary-foreground flex items-center justify-center shadow-[0_0_50px_rgba(16,185,129,0.5)] border border-white/20">
+                <Zap size={56} className="animate-pulse" />
               </div>
-              <span className="text-base font-black uppercase tracking-widest text-primary">MealSync AI</span>
+              <span className="text-base font-black uppercase tracking-widest text-primary text-glow">MealSync AI</span>
             </div>
 
-            <div className="flex flex-col items-center gap-4 hover:scale-110 transition-transform cursor-pointer">
-              <div className="w-24 h-24 rounded-3xl bg-blue-500/10 border-2 border-blue-500/30 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.2)]">
-                <Users size={40} className="text-blue-400" />
+            <div className="flex flex-col items-center gap-4 hover:-translate-y-2 transition-transform cursor-pointer group">
+              <div className="w-24 h-24 rounded-3xl glass-premium border border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.3)] flex items-center justify-center group-hover:shadow-[0_0_40px_rgba(59,130,246,0.4)] transition-all">
+                <Users size={40} className="text-blue-400 animate-pulse" />
               </div>
               <span className="text-sm font-black uppercase tracking-widest text-blue-400">NGO Network</span>
             </div>

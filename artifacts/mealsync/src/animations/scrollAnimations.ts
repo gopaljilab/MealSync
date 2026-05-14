@@ -54,7 +54,7 @@ export const initScrollReveal = () => {
   parallaxElements.forEach((el) => {
     const speed = parseFloat(el.getAttribute('data-parallax-speed') || '0.1');
     gsap.to(el, {
-      y: (i, target) => -ScrollTrigger.maxScroll(window) * speed,
+      y: speed * 100, // Move by a relative amount based on speed
       ease: 'none',
       scrollTrigger: {
         trigger: el,
