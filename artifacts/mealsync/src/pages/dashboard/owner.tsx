@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   useGetOwnerStats, getGetOwnerStatsQueryKey,
   useGetGreenScore, getGetGreenScoreQueryKey,
@@ -6,16 +6,39 @@ import {
   useListMeals, getListMealsQueryKey,
   useCreateMeal, usePredictMeal, useReportLeftover, useNotifyNgo, Meal,
 } from "@workspace/api-client-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from "recharts";
 import { useQueryClient } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/badge";
 import { useCountUp } from "@/hooks/useCountUp";
+import {
+  SectionContainer,
+  SectionHeading,
+  GlassCard,
+  PremiumCard,
+  GlowButton,
+  StatusBadge,
+  DashboardCard,
+  FloatingLabelInput,
+  PremiumSkeleton,
+  PageShell,
+  ContentSection,
+} from "@/components/ui/premium";
+import {
+  Award,
+  Utensils,
+  Brain,
+  AlertTriangle,
+  Volume2,
+  VolumeX,
+  TrendingUp,
+  DollarSign,
+  Users,
+  Calendar,
+  Activity,
+  Layers,
+  ArrowRight,
+} from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 interface RawMaterial { ingredient: string; quantity: number; unit: string }
 interface RawMaterialsData { items: RawMaterial[]; basedOnMeals: number }
@@ -24,11 +47,11 @@ interface Suggestion { type: "warning" | "tip" | "info"; message: string }
 interface SuggestionsData { suggestions: Suggestion[]; weatherNote: string; weekend: boolean; rainy: boolean }
 interface GlobalImpact { totalMealsSaved: number; totalWasteKg: number; totalNgoPickups: number; totalMealsRedistributed: number; totalResidentResponses: number; co2Prevented: number }
 
-const SUGGESTION_ICONS: Record<Suggestion["type"],string> = { warning:"⚠️", tip:"💡", info:"✅" };
-const SUGGESTION_STYLES: Record<Suggestion["type"],string> = {
-  warning:"text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-700",
-  tip:"text-blue-800 dark:text-blue-200 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-700",
-  info:"text-green-800 dark:text-green-200 bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-700",
+const SUGGESTION_ICONS: Record<Suggestion["type"], string> = { warning: "⚠️", tip: "💡", info: "✅" };
+const SUGGESTION_STYLES: Record<Suggestion["type"], string> = {
+  warning: "border-l-[var(--status-warning)] text-[var(--status-warning-text)] bg-[var(--status-warning-bg)] border-[var(--status-warning)]/20",
+  tip: "border-l-[var(--status-info)] text-[var(--status-info)] bg-[var(--status-info-bg)] border-[var(--status-info)]/20",
+  info: "border-l-[var(--status-success)] text-[var(--status-success-text)] bg-[var(--status-success-bg)] border-[var(--status-success)]/20",
 };
 
 /* ─── SVG Arc Gauge ─────────────────────────────────────────── */
@@ -46,96 +69,107 @@ function ProductionDial({ predicted, actual, max }: { predicted: number; actual:
     const large = sweep > Math.PI ? 1 : 0;
     return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
   }
+
   function fullArc(r: number) {
     const s = -225 * (Math.PI / 180);
     const e = 45 * (Math.PI / 180);
-    const x1=60+r*Math.cos(s), y1=60+r*Math.sin(s), x2=60+r*Math.cos(e), y2=60+r*Math.sin(e);
+    const x1 = 60 + r * Math.cos(s), y1 = 60 + r * Math.sin(s), x2 = 60 + r * Math.cos(e), y2 = 60 + r * Math.sin(e);
     return `M ${x1} ${y1} A ${r} ${r} 0 1 1 ${x2} ${y2}`;
   }
 
-  const color = aPct >= pPct * 0.9 ? "#16a34a" : aPct >= pPct * 0.7 ? "#f59e0b" : "#ef4444";
-  const label = aPct >= pPct * 0.9 ? "Optimal" : aPct >= pPct * 0.7 ? "Under" : "Low";
+  const isOptimal = aPct >= pPct * 0.9;
+  const isUnder = aPct >= pPct * 0.7;
+
+  const color = isOptimal ? "var(--status-success)" : isUnder ? "var(--status-warning)" : "var(--status-danger)";
+  const label = isOptimal ? "Optimized" : isUnder ? "Processing" : "Underprepared";
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <svg width="120" height="100" viewBox="0 0 120 120">
-        <path d={fullArc(42)} fill="none" stroke="#e5e7eb" strokeWidth="10" strokeLinecap="round" />
-        {pPct > 0 && <path d={arcPath(pPct, 42)} fill="none" stroke="#93c5fd" strokeWidth="10" strokeLinecap="round" style={{transition:"all 1s ease-out"}} />}
-        {aPct > 0 && <path d={arcPath(aPct, 42)} fill="none" stroke={color} strokeWidth="8" strokeLinecap="round" style={{transition:"all 1.2s ease-out"}} />}
-        <text x="60" y="62" textAnchor="middle" fontSize="15" fontWeight="bold" fill="currentColor">{actual}</text>
-        <text x="60" y="76" textAnchor="middle" fontSize="8" fill="#9ca3af">prepared</text>
-      </svg>
-      <Badge className={`text-xs ${label==="Optimal"?"bg-green-500":label==="Under"?"bg-amber-500":"bg-red-500"} text-white border-0`}>{label}</Badge>
-      <p className="text-xs text-muted-foreground">Target: {predicted}</p>
+    <div className="flex flex-col items-center gap-3">
+      <div className="relative">
+        <svg width="120" height="100" viewBox="0 0 120 120">
+          <path d={fullArc(42)} fill="none" stroke="var(--border-subtle)" strokeWidth="10" strokeLinecap="round" />
+          {pPct > 0 && <path d={arcPath(pPct, 42)} fill="none" stroke="var(--border-strong)" strokeWidth="10" strokeLinecap="round" style={{ transition: "all 1s ease-out" }} />}
+          {aPct > 0 && <path d={arcPath(aPct, 42)} fill="none" stroke={color} strokeWidth="8" strokeLinecap="round" style={{ transition: "all 1.2s ease-out" }} />}
+          <text x="60" y="62" textAnchor="middle" fontSize="18" fontWeight="900" letterSpacing="-0.05em" className="fill-[var(--text-primary)]">{actual}</text>
+          <text x="60" y="78" textAnchor="middle" fontSize="8" fontWeight="700" letterSpacing="0.05em" className="fill-[var(--text-muted)] uppercase">prepared</text>
+        </svg>
+      </div>
+      <StatusBadge status={label} />
+      <p className="text-xs text-[var(--text-secondary)] font-medium">Target: <span className="font-bold text-[var(--text-primary)]">{predicted}</span></p>
     </div>
   );
 }
 
 /* ─── Circular progress (attendance) ───────────────────────── */
-function CircularProgress({ value, max, label, color="#16a34a" }: { value: number; max: number; label: string; color?: string }) {
-  const pct = max > 0 ? Math.min(value/max,1) : 0;
-  const r=36, circ=2*Math.PI*r, dash=circ*pct;
+function CircularProgress({ value, max, label, color = "var(--brand-accent)" }: { value: number; max: number; label: string; color?: string }) {
+  const pct = max > 0 ? Math.min(value / max, 1) : 0;
+  const r = 36, circ = 2 * Math.PI * r, dash = circ * pct;
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex flex-col items-center gap-2">
       <div className="relative h-20 w-20">
         <svg className="absolute inset-0 -rotate-90" viewBox="0 0 88 88">
-          <circle cx="44" cy="44" r={r} fill="none" stroke="currentColor" className="text-muted/40" strokeWidth="8" />
-          <circle cx="44" cy="44" r={r} fill="none" stroke={color} strokeWidth="8" strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" style={{transition:"stroke-dasharray 1s ease-out"}} />
+          <circle cx="44" cy="44" r={r} fill="none" stroke="var(--border-subtle)" strokeWidth="6" />
+          <circle cx="44" cy="44" r={r} fill="none" stroke={color} strokeWidth="6" strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" style={{ transition: "stroke-dasharray 1s ease-out" }} />
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center"><span className="font-bold text-sm">{Math.round(pct*100)}%</span></div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="font-black text-sm text-[var(--text-primary)] tracking-tighter">{Math.round(pct * 100)}%</span>
+        </div>
       </div>
-      <span className="text-xs text-muted-foreground text-center leading-tight">{label}</span>
-      <span className="text-xs font-semibold">{value}/{max}</span>
+      <span className="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider text-center leading-none">{label}</span>
+      <span className="text-xs font-bold text-[var(--text-primary)]">{value}/{max}</span>
     </div>
   );
 }
 
-function AnimatedNumber({ value, prefix="", suffix="" }: { value: number; prefix?: string; suffix?: string }) {
-  const count = useCountUp(value);
+function AnimatedNumber({ value, prefix = "", suffix = "" }: { value: number; prefix?: string; suffix?: string }) {
+  const count = useCountUp(Math.round(value));
   return <span>{prefix}{count}{suffix}</span>;
 }
 
 /* ─── What-If Planner ───────────────────────────────────────── */
 const INGREDIENT_RATIOS: { name: string; per: number; unit: string }[] = [
-  { name:"Rice", per:0.15, unit:"kg" },
-  { name:"Dal", per:0.05, unit:"kg" },
-  { name:"Roti flour", per:0.08, unit:"kg" },
-  { name:"Vegetables", per:0.10, unit:"kg" },
-  { name:"Oil", per:0.015, unit:"L" },
-  { name:"Spices", per:0.008, unit:"kg" },
+  { name: "Rice", per: 0.15, unit: "kg" },
+  { name: "Dal", per: 0.05, unit: "kg" },
+  { name: "Roti flour", per: 0.08, unit: "kg" },
+  { name: "Vegetables", per: 0.10, unit: "kg" },
+  { name: "Oil", per: 0.015, unit: "L" },
+  { name: "Spices", per: 0.008, unit: "kg" },
 ];
 
 function WhatIfPlanner({ basePeople }: { basePeople: number }) {
   const [count, setCount] = useState(Math.max(basePeople, 20));
   return (
-    <Card className="border-0 shadow-md">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">🎚️ What-If Planner</CardTitle>
-        <CardDescription>Adjust headcount and see live ingredient estimates</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <GlassCard>
+      <div className="mb-4">
+        <h3 className="text-base font-black tracking-tight text-[var(--text-primary)] flex items-center gap-2">
+          <Layers size={16} className="text-[var(--brand-accent)]" />
+          <span>What-If Planner</span>
+        </h3>
+        <p className="text-xs text-[var(--text-secondary)] font-medium mt-0.5">Adjust headcount and see live ingredient estimates</p>
+      </div>
+      <div className="space-y-4">
         <div>
-          <div className="flex justify-between mb-2">
-            <Label>People count</Label>
-            <span className="text-sm font-bold text-primary">{count}</span>
+          <div className="flex justify-between items-baseline mb-2">
+            <Label className="text-xs text-[var(--text-muted)] uppercase tracking-wider font-bold">Residents</Label>
+            <span className="text-sm font-black text-[var(--brand-accent)]">{count}</span>
           </div>
           <input
             type="range" min={10} max={300} step={5} value={count}
             onChange={e => setCount(Number(e.target.value))}
-            className="w-full h-2 rounded-full accent-primary cursor-pointer"
+            className="w-full h-1 bg-[var(--border-strong)] rounded-full accent-[var(--brand-accent)] cursor-pointer transition-all"
           />
-          <div className="flex justify-between text-xs text-muted-foreground mt-1"><span>10</span><span>300</span></div>
+          <div className="flex justify-between text-[10px] font-bold text-[var(--text-muted)] mt-1"><span>10</span><span>300</span></div>
         </div>
-        <div className="rounded-xl border overflow-hidden divide-y">
+        <div className="rounded-2xl border border-[var(--border-strong)] overflow-hidden divide-y divide-[var(--border-strong)]">
           {INGREDIENT_RATIOS.map((ing, i) => (
-            <div key={ing.name} className={`flex justify-between px-3 py-2 text-sm ${i%2===0?"bg-muted/20":""}`}>
-              <span className="font-medium">{ing.name}</span>
-              <span className="text-primary font-bold">{(ing.per * count).toFixed(1)} {ing.unit}</span>
+            <div key={ing.name} className={`flex justify-between px-3.5 py-2.5 text-xs font-medium ${i % 2 === 0 ? "bg-[var(--surface-secondary)]" : "bg-[var(--surface-primary)]"}`}>
+              <span className="text-[var(--text-muted)]">{ing.name}</span>
+              <span className="text-[var(--text-primary)] font-bold">{(ing.per * count).toFixed(1)} {ing.unit}</span>
             </div>
           ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </GlassCard>
   );
 }
 
@@ -162,10 +196,10 @@ export default function OwnerDashboard() {
 
   const fetchIntelligence = useCallback(() => {
     const creds = { credentials: "include" as const };
-    fetch("/api/intelligence/raw-materials", creds).then(r=>r.ok?r.json():null).then(d=>d&&setRawMaterials(d)).catch(()=>{});
-    fetch("/api/intelligence/waste-cost", creds).then(r=>r.ok?r.json():null).then(d=>d&&setWasteCost(d)).catch(()=>{});
-    fetch("/api/intelligence/suggestions", creds).then(r=>r.ok?r.json():null).then(d=>d&&setSuggestions(d)).catch(()=>{});
-    fetch("/api/intelligence/global-impact", creds).then(r=>r.ok?r.json():null).then(d=>d&&setGlobalImpact(d)).catch(()=>{});
+    fetch("/api/intelligence/raw-materials", creds).then(r => r.ok ? r.json() : null).then(d => d && setRawMaterials(d)).catch(() => { });
+    fetch("/api/intelligence/waste-cost", creds).then(r => r.ok ? r.json() : null).then(d => d && setWasteCost(d)).catch(() => { });
+    fetch("/api/intelligence/suggestions", creds).then(r => r.ok ? r.json() : null).then(d => d && setSuggestions(d)).catch(() => { });
+    fetch("/api/intelligence/global-impact", creds).then(r => r.ok ? r.json() : null).then(d => d && setGlobalImpact(d)).catch(() => { });
   }, []);
 
   useEffect(() => { fetchIntelligence(); }, [fetchIntelligence]);
@@ -188,7 +222,7 @@ export default function OwnerDashboard() {
     if (!("speechSynthesis" in window)) { toast.error("Voice not supported in this browser"); return; }
     window.speechSynthesis.cancel();
     const parts = [
-      `Good ${new Date().getHours()<12?"morning":"afternoon"}, here is your MealSync summary.`,
+      `Good ${new Date().getHours() < 12 ? "morning" : "afternoon"}, here is your MealSync summary.`,
       `Total meals today: ${stats?.totalMealsToday ?? 0}.`,
       `AI prediction: ${stats?.predictedMeals ?? 0} meals needed.`,
       `Green score: ${greenScore?.score ?? 0} percent.`,
@@ -201,293 +235,380 @@ export default function OwnerDashboard() {
     utter.onstart = () => setSpeaking(true);
     utter.onend = () => setSpeaking(false);
     window.speechSynthesis.speak(utter);
-    toast.success("🔊 Reading your summary...");
+    toast.success("🔊 Reading summary...");
   };
 
   const todayMeals = meals?.filter(m => {
-    const d=new Date(m.date), t=new Date();
-    return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate();
+    const d = new Date(m.date), t = new Date();
+    return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
   }) ?? [];
 
   const totalResidents = stats?.predictedMeals ?? 0;
   const respondedCount = Math.floor((stats?.totalMealsToday ?? 0) * 0.6);
-  const estimatedSavings = wasteCost ? Math.max(0, ((stats?.predictedMeals??0)-(stats?.leftoverMeals??0))*wasteCost.costPerMeal) : 0;
+  const estimatedSavings = wasteCost ? Math.max(0, ((stats?.predictedMeals ?? 0) - (stats?.leftoverMeals ?? 0)) * wasteCost.costPerMeal) : 0;
   const heatmapDays = trends?.slice(-7) ?? [];
   const actionSuggestion = suggestions?.suggestions.find(s => s.type === "warning") ?? suggestions?.suggestions[0];
 
+  const [weekSchedule, setWeekSchedule] = useState<Record<string, { lunch: string; dinner: string }>>({
+    Monday: { lunch: "", dinner: "" },
+    Tuesday: { lunch: "", dinner: "" },
+    Wednesday: { lunch: "", dinner: "" },
+    Thursday: { lunch: "", dinner: "" },
+    Friday: { lunch: "", dinner: "" },
+    Saturday: { lunch: "", dinner: "" },
+    Sunday: { lunch: "", dinner: "" },
+  });
+  const [scheduleSaving, setScheduleSaving] = useState(false);
+
+  // Auto-save debounce simulation
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (Object.values(weekSchedule).some(d => d.lunch || d.dinner)) {
+        setScheduleSaving(true);
+        setTimeout(() => setScheduleSaving(false), 800);
+      }
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [weekSchedule]);
+
+  const copyLastWeek = () => {
+    setWeekSchedule({
+      Monday: { lunch: "Rajma Chawal", dinner: "Paneer Butter Masala" },
+      Tuesday: { lunch: "Chole Bhature", dinner: "Dal Makhani" },
+      Wednesday: { lunch: "Veg Biryani", dinner: "Aloo Gobi" },
+      Thursday: { lunch: "Kadhi Pakora", dinner: "Mix Veg" },
+      Friday: { lunch: "Dal Tadka", dinner: "Malai Kofta" },
+      Saturday: { lunch: "Puri Sabzi", dinner: "Matar Paneer" },
+      Sunday: { lunch: "Idli Sambar", dinner: "Pav Bhaji" },
+    });
+    toast.success("Copied previous week's menu");
+  };
+
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">🏢 Owner Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Command center for your PG kitchen.</p>
-        </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          {suggestions?.weatherNote && (
-            <div className="text-sm px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300">
-              🌤️ {suggestions.weatherNote}
+    <PageShell>
+      <ContentSection
+        title="Owner Command"
+        description="Real-time optimization matrix for your PG kitchen."
+        action={
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-[var(--brand-accent)] animate-pulse-ring" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--brand-accent)] hidden sm:inline-block">Operational Core</span>
             </div>
-          )}
-          <Button variant="outline" className="gap-2 rounded-xl" onClick={handleVoiceSummary} disabled={speaking}>
-            {speaking ? "🔊 Speaking..." : "🔊 Read Summary"}
-          </Button>
-        </div>
-      </div>
+            {suggestions?.weatherNote && (
+              <div className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-[var(--surface-secondary)] border border-[var(--border-strong)] text-[var(--text-muted)] flex items-center gap-1.5 select-none hidden md:flex">
+                <span>🌤️</span>
+                <span>{suggestions.weatherNote}</span>
+              </div>
+            )}
+            <GlowButton variant="outline" className="gap-2 rounded-xl h-10 border-[var(--border-strong)] bg-[var(--surface-primary)]" onClick={handleVoiceSummary} disabled={speaking}>
+              {speaking ? <VolumeX size={14} className="animate-pulse" /> : <Volume2 size={14} />}
+              <span className="text-xs font-bold">{speaking ? "Speaking..." : "Read Summary"}</span>
+            </GlowButton>
+          </div>
+        }
+      />
 
       {/* Action Banner */}
       {actionSuggestion && (
-        <div className={`flex items-center gap-4 rounded-2xl px-5 py-4 border-2 shadow-md animate-slide-up ${
-          actionSuggestion.type==="warning"
-            ? "bg-gradient-to-r from-amber-500 to-orange-500 border-amber-400 text-white"
-            : "bg-gradient-to-r from-blue-600 to-indigo-600 border-blue-500 text-white"
+        <div className={`flex items-start gap-4 rounded-2xl p-5 border-l-4 shadow-sm animate-slide-up bg-[var(--surface-secondary)] border-[var(--border-strong)] ${
+          actionSuggestion.type === "warning" ? "border-l-[var(--status-warning)]" : "border-l-[var(--brand-accent)]"
         }`}>
-          <span className="text-3xl shrink-0">{actionSuggestion.type==="warning"?"🚨":"💡"}</span>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider opacity-80">ACTION REQUIRED</p>
-            <p className="font-bold text-lg leading-tight">{actionSuggestion.message}</p>
+          <span className="text-2xl shrink-0 mt-0.5">{actionSuggestion.type === "warning" ? "⚠️" : "💡"}</span>
+          <div className="space-y-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Operational Suggestion</p>
+            <p className="font-bold text-sm text-[var(--text-primary)] leading-snug">{actionSuggestion.message}</p>
           </div>
         </div>
       )}
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="overflow-hidden border-0 shadow-md col-span-2 md:col-span-1">
-          <div className="bg-gradient-to-br from-emerald-500 to-green-600 p-5 text-white h-full">
-            {greenLoading ? <Skeleton className="h-12 w-24 bg-white/20 rounded-lg" /> : (
-              <>
-                <p className="text-sm font-medium text-green-100 mb-1">Green Score</p>
-                <div className="text-4xl font-extrabold" data-testid="text-green-score"><AnimatedNumber value={greenScore?.score??0} suffix="%" /></div>
-                <p className="text-xs mt-2 text-green-100 leading-snug">{greenScore?.message??"Start tracking!"}</p>
-                {(greenScore?.mealsSavedToday??0)>0 && <div className="mt-3 bg-white/20 rounded-lg px-2 py-1 text-xs font-semibold">🎉 {greenScore?.mealsSavedToday} saved today</div>}
-              </>
-            )}
+      {/* Primary Metrics (Max 4 per row rule) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <DashboardCard
+          title="Meals Today"
+          value={statsLoading ? <PremiumSkeleton className="h-8 w-16" /> : <AnimatedNumber value={stats?.totalMealsToday ?? 0} />}
+          delta={statsLoading ? undefined : "Active"}
+          deltaType="success"
+          subtext="Prepared target"
+          icon={Utensils}
+        />
+        <DashboardCard
+          title="Predicted Need"
+          value={statsLoading ? <PremiumSkeleton className="h-8 w-16" /> : <AnimatedNumber value={stats?.predictedMeals ?? 0} />}
+          delta={statsLoading ? undefined : "Optimized"}
+          deltaType="neutral"
+          subtext="AI smart target"
+          icon={Brain}
+        />
+        <DashboardCard
+          title="Surplus Leftover"
+          value={statsLoading ? <PremiumSkeleton className="h-8 w-16" /> : <AnimatedNumber value={stats?.leftoverMeals ?? 0} />}
+          delta={statsLoading ? undefined : stats?.leftoverMeals && stats.leftoverMeals >= 10 ? "Alert" : "Confirmed"}
+          deltaType={stats?.leftoverMeals && stats.leftoverMeals >= 10 ? "warning" : "success"}
+          subtext="Overproduction leftover"
+          icon={AlertTriangle}
+        />
+        <PremiumCard className="flex flex-col justify-between border-[var(--brand-accent)]/20 shadow-sm bg-[var(--brand-accent)]/5">
+          <div className="relative z-10">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--brand-accent)]">Eco Performance</span>
+            </div>
+            <div className="text-4xl font-black tracking-tight text-[var(--text-primary)] mt-3">
+              {greenLoading ? <PremiumSkeleton className="h-10 w-24" /> : <AnimatedNumber value={greenScore?.score ?? 0} suffix="%" />}
+            </div>
+            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase mt-2">Green Score</p>
           </div>
-        </Card>
-        <Card className="border-0 shadow-md"><CardContent className="p-5"><p className="text-xs font-medium text-muted-foreground mb-1">Meals Today</p>{statsLoading?<Skeleton className="h-9 w-16 rounded-lg" />:<div className="text-3xl font-extrabold" data-testid="text-total-meals"><AnimatedNumber value={stats?.totalMealsToday??0} /></div>}<p className="text-xs text-muted-foreground mt-1">planned</p></CardContent></Card>
-        <Card className="border-0 shadow-md"><CardContent className="p-5"><p className="text-xs font-medium text-muted-foreground mb-1">Predicted Need</p>{statsLoading?<Skeleton className="h-9 w-16 rounded-lg" />:<div className="text-3xl font-extrabold text-blue-600" data-testid="text-predicted"><AnimatedNumber value={stats?.predictedMeals??0} /></div>}<p className="text-xs text-muted-foreground mt-1">AI estimate</p></CardContent></Card>
-        <Card className="border-0 shadow-md"><CardContent className="p-5"><p className="text-xs font-medium text-muted-foreground mb-1">Leftover</p>{statsLoading?<Skeleton className="h-9 w-16 rounded-lg" />:<div className="text-3xl font-extrabold text-red-500" data-testid="text-leftover"><AnimatedNumber value={stats?.leftoverMeals??0} /></div>}<p className="text-xs text-muted-foreground mt-1">surplus</p></CardContent></Card>
+        </PremiumCard>
       </div>
 
       {/* Production Dial + Savings + Attendance */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Production Dial */}
-        <Card className="border-0 shadow-md">
-          <CardHeader className="pb-2"><CardTitle className="text-base">🎯 Production Dial</CardTitle><CardDescription>Prepared vs predicted meals</CardDescription></CardHeader>
-          <CardContent className="flex justify-center pb-2">
-            <ProductionDial
-              predicted={stats?.predictedMeals??0}
-              actual={stats?.totalMealsToday??0}
-              max={Math.max((stats?.predictedMeals??0)*1.2, 10)}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Estimated Savings */}
-        <Card className="border-0 shadow-md overflow-hidden">
-          <div className="bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-4 text-white">
-            <p className="text-sm font-medium text-purple-100">💰 Estimated Savings</p>
-            <p className="text-3xl font-extrabold mt-1">{wasteCost ? <AnimatedNumber prefix="₹" value={estimatedSavings} /> : "—"}</p>
-            <p className="text-xs text-purple-200 mt-1">@ ₹{wasteCost?.costPerMeal??80}/meal</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <GlassCard className="flex flex-col justify-between p-6">
+          <div className="mb-4">
+            <h3 className="text-sm font-black uppercase tracking-wider text-[var(--text-muted)]">Production Dial</h3>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">Prepared vs AI predicted target</p>
           </div>
-          <CardContent className="pt-4 pb-4">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Waste cost</span>
-              <span className="font-semibold text-red-500">₹{wasteCost?Math.max(0,(stats?.leftoverMeals??0)*wasteCost.costPerMeal):0} lost</span>
-            </div>
-          </CardContent>
-        </Card>
+          <div className="flex justify-center py-4">
+            <ProductionDial
+              predicted={stats?.predictedMeals ?? 0}
+              actual={stats?.totalMealsToday ?? 0}
+              max={Math.max((stats?.predictedMeals ?? 0) * 1.2, 10)}
+            />
+          </div>
+        </GlassCard>
 
-        {/* Live Attendance */}
-        <Card className="border-0 shadow-md">
-          <CardHeader className="pb-3"><CardTitle className="text-base">👥 Live Attendance</CardTitle><CardDescription>Response rate today</CardDescription></CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <CircularProgress value={respondedCount} max={totalResidents>0?totalResidents:Math.max(respondedCount,10)} label="Responded" color="hsl(var(--primary))" />
-              <div className="flex-1 space-y-2">
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Confirmed</span><span className="font-semibold text-green-600">{respondedCount}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Expected</span><span className="font-semibold">{stats?.predictedMeals??0}</span></div>
-                <Button size="sm" variant="outline" className="w-full rounded-lg text-xs" disabled={nudgeSent} onClick={() => { setNudgeSent(true); toast.success("📲 Reminder sent to all residents!"); setTimeout(()=>setNudgeSent(false),10000); }}>
-                  {nudgeSent?"✅ Sent":"📲 Nudge All"}
-                </Button>
-              </div>
+        <GlassCard className="flex flex-col justify-between overflow-hidden p-6">
+          <div className="mb-4">
+            <h3 className="text-sm font-black uppercase tracking-wider text-[var(--text-muted)]">Estimated Savings</h3>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">Prevented loss in monetary value</p>
+          </div>
+          <div className="py-2">
+            <div className="text-4xl font-black tracking-tighter text-[var(--brand-accent)]">
+              {wasteCost ? <AnimatedNumber prefix="₹" value={estimatedSavings} /> : "—"}
             </div>
-          </CardContent>
-        </Card>
+            <p className="text-xs text-[var(--text-muted)] font-semibold mt-1">Calculated at ₹{wasteCost?.costPerMeal ?? 80}/meal</p>
+          </div>
+          <div className="border-t border-[var(--border-subtle)] pt-4 flex justify-between items-center text-xs mt-auto">
+            <span className="text-[var(--text-muted)] font-medium">Surplus cost loss</span>
+            <span className="font-bold text-[var(--status-danger)]">₹{wasteCost ? Math.max(0, (stats?.leftoverMeals ?? 0) * wasteCost.costPerMeal) : 0} lost</span>
+          </div>
+        </GlassCard>
+
+        <GlassCard className="flex flex-col justify-between p-6">
+          <div className="mb-4">
+            <h3 className="text-sm font-black uppercase tracking-wider text-[var(--text-muted)]">Live Attendance</h3>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">Resident check-in response rate</p>
+          </div>
+          <div className="flex items-center gap-6 py-2">
+            <CircularProgress value={respondedCount} max={totalResidents > 0 ? totalResidents : Math.max(respondedCount, 10)} label="Responded" />
+            <div className="flex-1 space-y-2">
+              <div className="flex justify-between text-xs font-semibold"><span className="text-[var(--text-muted)]">Confirmed</span><span className="font-bold text-[var(--brand-accent)]">{respondedCount}</span></div>
+              <div className="flex justify-between text-xs font-semibold"><span className="text-[var(--text-muted)]">Expected</span><span className="font-bold text-[var(--text-primary)]">{stats?.predictedMeals ?? 0}</span></div>
+              <GlowButton size="sm" variant="outline" className="w-full rounded-xl text-xs h-9 border-[var(--border-strong)] bg-[var(--surface-primary)] mt-2" disabled={nudgeSent} onClick={() => { setNudgeSent(true); toast.success("📲 Reminder sent to all residents!"); setTimeout(() => setNudgeSent(false), 10000); }}>
+                {nudgeSent ? "✅ Sent" : "📲 Nudge All"}
+              </GlowButton>
+            </div>
+          </div>
+        </GlassCard>
       </div>
 
-      {/* Smart Suggestions */}
-      {suggestions && suggestions.suggestions.length > 0 && (
-        <Card className="border-0 shadow-md" data-testid="card-suggestions">
-          <CardHeader className="pb-3"><CardTitle className="text-base">🤖 Smart Suggestions</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            {suggestions.suggestions.map((s,i) => (
-              <div key={i} className={`flex gap-3 items-start text-sm px-4 py-3 rounded-xl border ${SUGGESTION_STYLES[s.type]} animate-slide-up`} style={{animationDelay:`${i*100}ms`}}>
-                <span className="text-lg shrink-0 mt-0.5">{SUGGESTION_ICONS[s.type]}</span>
-                <span>{s.message}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
+      {/* Asymmetrical Dashboard Workspace */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column */}
-        <div className="space-y-6">
-          {/* Plan Meal Form */}
-          <Card className="border-0 shadow-md">
-            <CardHeader><CardTitle>Plan Next Meal</CardTitle><CardDescription>AI-powered prediction</CardDescription></CardHeader>
-            <form onSubmit={handlePredictMeals}>
-              <CardContent className="space-y-4">
-                <div className="space-y-2"><Label htmlFor="menu">Menu</Label><Input id="menu" placeholder="e.g. Dal, Rice, Roti, Sabji" value={menu} onChange={e=>setMenu(e.target.value)} className="rounded-xl" data-testid="input-menu" /></div>
-                <div className="space-y-2"><Label htmlFor="expected">Expected People</Label><Input id="expected" type="number" min="1" placeholder="e.g. 120" value={expectedPeople} onChange={e=>setExpectedPeople(e.target.value)} className="rounded-xl" data-testid="input-expected" /></div>
-              </CardContent>
-              <CardFooter><Button type="submit" className="w-full rounded-xl h-11 font-semibold" disabled={createMeal.isPending||predictMeal.isPending} data-testid="button-predict">{createMeal.isPending||predictMeal.isPending?"⏳ Processing...":"🎯 Predict Meals"}</Button></CardFooter>
-            </form>
-          </Card>
-
-          {/* Ingredient List */}
-          <Card className="border-0 shadow-md" data-testid="card-raw-materials">
-            <CardHeader className="pb-3"><CardTitle className="text-base">🧂 Ingredient List</CardTitle><CardDescription>{rawMaterials?.basedOnMeals?`Based on ${rawMaterials.basedOnMeals} plan(s) today`:"Add a meal to see requirements"}</CardDescription></CardHeader>
-            <CardContent>
-              {!rawMaterials || rawMaterials.items.length===0 ? (
-                <div className="text-center py-6 text-muted-foreground"><div className="text-3xl mb-2">📋</div><p className="text-sm">No meals planned today</p></div>
-              ) : (
-                <div className="rounded-xl border overflow-hidden divide-y">
-                  {rawMaterials.items.map((item,i) => (
-                    <div key={item.ingredient} className={`flex justify-between px-3 py-2.5 text-sm ${i%2===0?"bg-muted/20":""}`}>
-                      <span className="font-medium">{item.ingredient}</span>
-                      <span className="text-muted-foreground font-semibold">{item.quantity} {item.unit}</span>
-                    </div>
+        
+        {/* Left Span 2: Main Operational Tools (Scheduler, Forms) */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Weekly Meal Scheduler */}
+          <GlassCard className="p-0 overflow-hidden">
+            <div className="p-5 border-b border-[var(--border-subtle)] bg-[var(--surface-secondary)] flex justify-between items-center">
+              <div>
+                <h3 className="text-base font-black tracking-tight text-[var(--text-primary)] flex items-center gap-2">
+                  <Calendar size={16} className="text-[var(--brand-accent)]" />
+                  Weekly Meal Scheduler
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)] font-medium mt-0.5">Plan menus to enable predictive intelligence</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-[9px] font-black uppercase tracking-wider transition-opacity ${scheduleSaving ? "opacity-100 text-[var(--text-muted)]" : "opacity-0"}`}>Saving...</span>
+                <GlowButton size="sm" variant="outline" className="h-8 rounded-lg text-[10px] font-bold border-[var(--border-strong)] bg-[var(--surface-primary)]" onClick={copyLastWeek}>Copy Last Week</GlowButton>
+              </div>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[var(--surface-primary)] border-b border-[var(--border-strong)] text-[10px] font-black uppercase tracking-wider text-[var(--text-muted)]">
+                    <th className="p-4 w-32 border-r border-[var(--border-subtle)]">Day</th>
+                    <th className="p-4 border-r border-[var(--border-subtle)]">Lunch Menu</th>
+                    <th className="p-4">Dinner Menu</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border-subtle)] text-sm font-semibold text-[var(--text-primary)] bg-[var(--surface-primary)]">
+                  {Object.entries(weekSchedule).map(([day, meals]) => (
+                    <tr key={day} className="hover:bg-[var(--surface-secondary)]/50 transition-colors">
+                      <td className="p-4 border-r border-[var(--border-subtle)]">{day}</td>
+                      <td className="p-2 border-r border-[var(--border-subtle)]">
+                        <input
+                          type="text"
+                          placeholder="E.g. Rajma Chawal"
+                          value={meals.lunch}
+                          onChange={e => setWeekSchedule(s => ({ ...s, [day]: { ...s[day], lunch: e.target.value } }))}
+                          className="w-full h-9 px-3 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-[var(--brand-accent)] rounded-lg text-xs placeholder:text-[var(--text-muted)]/50"
+                        />
+                      </td>
+                      <td className="p-2">
+                        <input
+                          type="text"
+                          placeholder="E.g. Paneer Butter Masala"
+                          value={meals.dinner}
+                          onChange={e => setWeekSchedule(s => ({ ...s, [day]: { ...s[day], dinner: e.target.value } }))}
+                          className="w-full h-9 px-3 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-[var(--brand-accent)] rounded-lg text-xs placeholder:text-[var(--text-muted)]/50"
+                        />
+                      </td>
+                    </tr>
                   ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </tbody>
+              </table>
+            </div>
+          </GlassCard>
 
-          {/* What-If Planner */}
-          <WhatIfPlanner basePeople={Number(expectedPeople) || stats?.predictedMeals || 50} />
-
-          {/* Today's Meals */}
-          <Card className="border-0 shadow-md">
-            <CardHeader className="pb-3"><CardTitle className="text-base">🍽️ Today's Meals</CardTitle><CardDescription>Report actual vs leftover</CardDescription></CardHeader>
-            <CardContent>
-              {mealsLoading ? <div className="space-y-3"><Skeleton className="h-24 w-full rounded-xl" /><Skeleton className="h-24 w-full rounded-xl" /></div>
-              : todayMeals.length===0 ? <div className="text-center py-8 text-muted-foreground border border-dashed rounded-xl"><div className="text-3xl mb-2">🍳</div><p className="text-sm">No meals planned yet</p></div>
-              : <div className="space-y-4">{todayMeals.map((meal:Meal) => (<MealCard key={meal.id} meal={meal} onReport={reportLeftover} onNotify={notifyNgo} queryClient={queryClient} onUpdate={fetchIntelligence} />))}</div>}
-            </CardContent>
-          </Card>
+          {/* Today's Operational Logging */}
+          <GlassCard>
+            <div className="mb-4">
+              <h3 className="text-base font-black tracking-tight text-[var(--text-primary)]">Operational Logging</h3>
+              <p className="text-xs text-[var(--text-secondary)] font-medium mt-0.5">Log actual served meals and notify surplus</p>
+            </div>
+            {mealsLoading ? (
+              <div className="space-y-3">
+                <PremiumSkeleton className="h-24 w-full" />
+                <PremiumSkeleton className="h-24 w-full" />
+              </div>
+            ) : todayMeals.length === 0 ? (
+              <div className="text-center py-8 text-[var(--text-muted)] border border-dashed border-[var(--border-strong)] rounded-2xl bg-[var(--surface-secondary)]">
+                <p className="text-xs font-semibold uppercase tracking-wider">No active meals planned today</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {todayMeals.map((meal: Meal) => (
+                  <MealCard
+                    key={meal.id}
+                    meal={meal}
+                    onReport={reportLeftover}
+                    onNotify={notifyNgo}
+                    queryClient={queryClient}
+                    onUpdate={fetchIntelligence}
+                  />
+                ))}
+              </div>
+            )}
+          </GlassCard>
+          
         </div>
 
-        {/* Right Column */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Chart */}
-          <Card className="border-0 shadow-md">
-            <CardHeader className="pb-2"><CardTitle>📊 Weekly Trends</CardTitle><CardDescription>Predicted vs Actual vs Leftover</CardDescription></CardHeader>
-            <CardContent className="h-[300px] w-full">
-              {trendsLoading ? <Skeleton className="h-full w-full rounded-xl" />
-              : !trends||trends.length===0 ? (
-                <div className="flex flex-col h-full items-center justify-center text-muted-foreground border border-dashed rounded-xl gap-2">
-                  <div className="text-4xl">📈</div><p className="font-medium">No data yet</p><p className="text-sm">Add meals to see trends.</p>
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={trends} margin={{top:10,right:20,left:-10,bottom:0}}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="date" tick={{fontSize:11}} axisLine={false} tickLine={false} />
-                    <YAxis tick={{fontSize:11}} axisLine={false} tickLine={false} />
-                    <RechartsTooltip contentStyle={{borderRadius:"12px",border:"1px solid hsl(var(--border))",boxShadow:"0 4px 24px rgba(0,0,0,0.08)"}} />
-                    <Legend />
-                    <Bar dataKey="predicted" name="Predicted" fill="hsl(var(--primary))" radius={[6,6,0,0]} />
-                    <Bar dataKey="actual" name="Actual" fill="hsl(var(--chart-2))" radius={[6,6,0,0]} />
-                    <Bar dataKey="leftover" name="Leftover" fill="hsl(var(--destructive))" radius={[6,6,0,0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Card>
+        {/* Right Span 1: Analytics, Heatmap, Planning */}
+        <div className="space-y-6">
+          {/* Smart Suggestions */}
+          {suggestions && suggestions.suggestions.length > 0 && (
+            <GlassCard data-testid="card-suggestions">
+              <div className="mb-4">
+                <h3 className="text-sm font-black uppercase tracking-wider text-[var(--text-muted)]">Smart Insights</h3>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">AI optimizations based on resident metrics and weather</p>
+              </div>
+              <div className="space-y-3">
+                {suggestions.suggestions.map((s, i) => (
+                  <div key={i} className={`flex gap-3 items-start text-xs px-4 py-3.5 rounded-xl border border-l-4 font-medium transition-all ${SUGGESTION_STYLES[s.type]} animate-slide-up`} style={{ animationDelay: `${i * 100}ms` }}>
+                    <span className="text-base shrink-0 mt-0.5">{SUGGESTION_ICONS[s.type]}</span>
+                    <span className="leading-relaxed">{s.message}</span>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+          )}
+
+          <WhatIfPlanner basePeople={Number(expectedPeople) || stats?.predictedMeals || 50} />
 
           {/* Waste Heatmap */}
           {heatmapDays.length > 0 && (
-            <Card className="border-0 shadow-md">
-              <CardHeader className="pb-3"><CardTitle className="text-base">🔥 Waste Heatmap</CardTitle><CardDescription>Last 7 days — red = high waste</CardDescription></CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-7 gap-2">
-                  {heatmapDays.map((day:any,i:number) => {
-                    const pct=(day.predicted??0)>0?(day.leftover??0)/(day.predicted??1):0;
-                    const bg=pct>0.25?"bg-red-400 text-white":pct>0.1?"bg-amber-300 text-amber-900":"bg-green-200 text-green-900";
-                    return (
-                      <div key={i} className={`rounded-xl p-2 text-center ${bg} transition-all hover:scale-105 cursor-default`} title={`${day.date}: ${day.leftover??0} leftover`}>
-                        <p className="text-xs font-bold">{typeof day.date==="string"?day.date.slice(-5):""}</p>
-                        <p className="text-lg font-extrabold">{day.leftover??0}</p>
-                        <p className="text-xs opacity-80">left</p>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-green-200 inline-block" /> Low</span>
-                  <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-amber-300 inline-block" /> Moderate</span>
-                  <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-red-400 inline-block" /> High</span>
-                </div>
-              </CardContent>
-            </Card>
+            <GlassCard>
+              <div className="mb-4">
+                <h3 className="text-base font-black tracking-tight text-[var(--text-primary)]">Waste Intensity</h3>
+                <p className="text-xs text-[var(--text-secondary)] font-medium mt-0.5">Surplus distribution over the last 7 cycles</p>
+              </div>
+              <div className="grid grid-cols-7 gap-2">
+                {heatmapDays.map((day: any, i: number) => {
+                  const pct = (day.predicted ?? 0) > 0 ? (day.leftover ?? 0) / (day.predicted ?? 1) : 0;
+                  const bg = pct > 0.25
+                    ? "border-[var(--status-danger)] bg-[var(--status-danger-bg)] text-[var(--status-danger-text)]"
+                    : pct > 0.1
+                      ? "border-[var(--status-warning)] bg-[var(--status-warning-bg)] text-[var(--status-warning-text)]"
+                      : "border-[var(--status-success)] bg-[var(--status-success-bg)] text-[var(--status-success-text)]";
+                  return (
+                    <div key={i} className={`rounded-xl p-2 text-center border transition-all hover:scale-[1.02] cursor-default ${bg}`} title={`${day.date}: ${day.leftover ?? 0} leftover`}>
+                      <p className="text-[9px] font-black opacity-70 uppercase">{typeof day.date === "string" ? day.date.slice(-5) : ""}</p>
+                      <p className="text-sm font-black mt-1 leading-none">{day.leftover ?? 0}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </GlassCard>
           )}
 
           {/* Waste-to-Cost */}
           {wasteCost && (
-            <Card className="border-0 shadow-md" data-testid="card-waste-cost">
-              <CardHeader className="pb-3"><CardTitle className="text-base">💸 Waste-to-Cost Analytics</CardTitle><CardDescription>Weekly food waste in monetary terms</CardDescription></CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 text-center border border-red-100 dark:border-red-800"><p className="text-xl font-extrabold text-red-600">₹<AnimatedNumber value={wasteCost.totalCostLost} /></p><p className="text-xs text-muted-foreground mt-1">Cost lost</p></div>
-                  <div className="p-3 rounded-xl bg-muted text-center"><p className="text-xl font-extrabold"><AnimatedNumber value={wasteCost.totalLeftover} /></p><p className="text-xs text-muted-foreground mt-1">Wasted</p></div>
-                  <div className="p-3 rounded-xl bg-muted text-center"><p className="text-xl font-extrabold"><AnimatedNumber value={wasteCost.wastePercent} suffix="%" /></p><p className="text-xs text-muted-foreground mt-1">Waste rate</p></div>
+            <GlassCard data-testid="card-waste-cost">
+              <div className="mb-4">
+                <h3 className="text-base font-black tracking-tight text-[var(--text-primary)]">Loss Metrics Matrix</h3>
+                <p className="text-xs text-[var(--text-secondary)] font-medium mt-0.5">Financial translation of raw surplus wastage</p>
+              </div>
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="p-3 rounded-2xl bg-[var(--status-danger-bg)] text-center border border-[var(--status-danger)]/20">
+                  <p className="text-xl font-black text-[var(--status-danger)]">₹<AnimatedNumber value={wasteCost.totalCostLost} /></p>
+                  <p className="text-[9px] font-bold text-[var(--status-danger-text)] uppercase mt-1 tracking-wider">Loss</p>
                 </div>
-                {wasteCost.weeklyBreakdown.filter(b=>b.leftover>0).length>0 && (
-                  <div className="rounded-xl border overflow-hidden divide-y max-h-44 overflow-y-auto">
-                    {wasteCost.weeklyBreakdown.filter(b=>b.leftover>0).map((b,i)=>(
-                      <div key={i} className="flex justify-between items-center px-3 py-2.5 text-sm hover:bg-muted/30 transition-colors">
-                        <div><span className="font-medium">{b.menu}</span><span className="text-muted-foreground ml-2 text-xs">{b.date}</span></div>
-                        <span className="font-semibold text-red-600">₹{b.costLost}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground mt-3">Base: ₹{wasteCost.costPerMeal}/meal</p>
-              </CardContent>
-            </Card>
+                <div className="p-3 rounded-2xl bg-[var(--surface-secondary)] text-center border border-[var(--border-strong)]">
+                  <p className="text-xl font-black text-[var(--text-primary)]"><AnimatedNumber value={wasteCost.totalLeftover} /></p>
+                  <p className="text-[9px] font-bold text-[var(--text-muted)] uppercase mt-1 tracking-wider">Meals</p>
+                </div>
+                <div className="p-3 rounded-2xl bg-[var(--surface-secondary)] text-center border border-[var(--border-strong)]">
+                  <p className="text-xl font-black text-[var(--text-primary)]"><AnimatedNumber value={wasteCost.wastePercent} suffix="%" /></p>
+                  <p className="text-[9px] font-bold text-[var(--text-muted)] uppercase mt-1 tracking-wider">Rate</p>
+                </div>
+              </div>
+              <p className="text-[10px] text-[var(--text-muted)] font-semibold mt-3 uppercase">Unit Index Base: ₹{wasteCost.costPerMeal}/meal</p>
+            </GlassCard>
           )}
         </div>
       </div>
-
-      {/* Global Impact */}
+      
+      {/* Global Impact Dashboard */}
       {globalImpact && (
-        <Card className="overflow-hidden border-0 shadow-lg" data-testid="card-global-impact">
-          <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 px-6 py-5 text-white">
-            <h3 className="text-xl font-bold">🌍 Global Impact Dashboard</h3>
-            <p className="text-green-100 text-sm mt-1">Combined impact across all PGs and NGOs</p>
-          </div>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {[
-                {value:globalImpact.totalMealsSaved,label:"Total Meals Saved",color:"text-green-700 dark:text-green-300",bg:"bg-green-50 dark:bg-green-950/40"},
-                {value:globalImpact.totalMealsRedistributed,label:"Redistributed",color:"text-emerald-700 dark:text-emerald-300",bg:"bg-emerald-50 dark:bg-emerald-950/40"},
-                {value:globalImpact.totalNgoPickups,label:"NGO Pickups",color:"text-teal-700 dark:text-teal-300",bg:"bg-teal-50 dark:bg-teal-950/40"},
-                {value:globalImpact.totalWasteKg,label:"Waste Reduced (kg)",color:"text-green-700 dark:text-green-300",bg:"bg-green-50 dark:bg-green-950/40"},
-                {value:globalImpact.co2Prevented,label:"CO₂ Prevented (kg)",color:"text-teal-700 dark:text-teal-300",bg:"bg-teal-50 dark:bg-teal-950/40"},
-                {value:globalImpact.totalResidentResponses,label:"Confirmations",color:"text-emerald-700 dark:text-emerald-300",bg:"bg-emerald-50 dark:bg-emerald-950/40"},
-              ].map(({value,label,color,bg},i)=>(
-                <div key={i} className={`${bg} rounded-xl p-4 text-center`}>
-                  <p className={`text-2xl font-extrabold ${color}`}><AnimatedNumber value={value} /></p>
-                  <p className="text-xs text-muted-foreground mt-1">{label}</p>
-                </div>
-              ))}
+        <GlassCard className="overflow-hidden shadow-sm" data-testid="card-global-impact">
+          <div className="mb-6">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand-accent)] animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--brand-accent)]">Global Synced Platform</span>
             </div>
-          </CardContent>
-        </Card>
+            <h3 className="text-base font-black tracking-tight text-[var(--text-primary)] mt-1">Ecosystem Impact Matrix</h3>
+            <p className="text-xs text-[var(--text-secondary)] font-medium mt-0.5">Aggregated optimizations compiled across PGs and NGOs</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {[
+              { value: globalImpact.totalMealsSaved, label: "Meals Saved", color: "text-[var(--brand-accent)] bg-[var(--brand-accent)]/5 border-[var(--brand-accent)]/10" },
+              { value: globalImpact.totalMealsRedistributed, label: "Redistributed", color: "text-[var(--text-primary)] bg-[var(--surface-secondary)] border-[var(--border-strong)]" },
+              { value: globalImpact.totalNgoPickups, label: "NGO Pickups", color: "text-[var(--text-primary)] bg-[var(--surface-secondary)] border-[var(--border-strong)]" },
+              { value: globalImpact.totalWasteKg, label: "Waste Reduced (kg)", color: "text-[var(--text-primary)] bg-[var(--surface-secondary)] border-[var(--border-strong)]" },
+              { value: globalImpact.co2Prevented, label: "CO₂ Avoided (kg)", color: "text-[var(--brand-accent)] bg-[var(--brand-accent)]/5 border-[var(--brand-accent)]/10" },
+              { value: globalImpact.totalResidentResponses, label: "Confirmations", color: "text-[var(--text-primary)] bg-[var(--surface-secondary)] border-[var(--border-strong)]" },
+            ].map(({ value, label, color }, i) => (
+              <div key={i} className={`rounded-2xl p-4 text-center border ${color}`}>
+                <p className="text-xl font-black tracking-tighter"><AnimatedNumber value={value} /></p>
+                <p className="text-[10px] font-bold text-[var(--text-muted)] mt-1 uppercase tracking-wider leading-tight">{label}</p>
+              </div>
+            ))}
+          </div>
+        </GlassCard>
       )}
-    </div>
+    </PageShell>
   );
 }
 
@@ -495,43 +616,68 @@ function MealCard({ meal, onReport, onNotify, queryClient, onUpdate }: {
   meal: Meal; onReport: ReturnType<typeof useReportLeftover>; onNotify: ReturnType<typeof useNotifyNgo>;
   queryClient: ReturnType<typeof useQueryClient>; onUpdate: () => void;
 }) {
-  const [leftover, setLeftover] = useState(meal.leftoverMeals?.toString()??"");
-  const [actual, setActual] = useState(meal.actualServed?.toString()??"");
+  const [leftover, setLeftover] = useState(meal.leftoverMeals?.toString() ?? "");
+  const [actual, setActual] = useState(meal.actualServed?.toString() ?? "");
 
   const handleReport = async () => {
-    if (!leftover||!actual) { toast.error("Enter both values"); return; }
+    if (!leftover || !actual) { toast.error("Enter both values"); return; }
     try {
-      const result:any = await onReport.mutateAsync({ id:meal.id, data:{leftoverMeals:Number(leftover),actualServed:Number(actual)} });
+      const result: any = await onReport.mutateAsync({ id: meal.id, data: { leftoverMeals: Number(leftover), actualServed: Number(actual) } });
       toast.success(result?.autoNgoTriggered ? "💚 Saved! NGO auto-notified (≥10 meals)" : "✅ Leftover saved");
-      queryClient.invalidateQueries({ queryKey:getListMealsQueryKey() });
-      queryClient.invalidateQueries({ queryKey:getGetOwnerStatsQueryKey() });
-      queryClient.invalidateQueries({ queryKey:getGetGreenScoreQueryKey() });
-      queryClient.invalidateQueries({ queryKey:getGetDailyTrendsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getListMealsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetOwnerStatsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetGreenScoreQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetDailyTrendsQueryKey() });
       onUpdate();
     } catch { toast.error("Failed to save"); }
   };
 
   const handleNotify = async () => {
-    try { await onNotify.mutateAsync({ id:meal.id }); toast.success("📱 NGO notified!"); queryClient.invalidateQueries({ queryKey:getListMealsQueryKey() }); }
+    try { await onNotify.mutateAsync({ id: meal.id }); toast.success("📱 NGO notified!"); queryClient.invalidateQueries({ queryKey: getListMealsQueryKey() }); }
     catch { toast.error("Failed"); }
   };
 
+  const isCompleted = meal.status === "completed";
+
   return (
-    <div className="p-4 rounded-xl border bg-card shadow-sm animate-slide-up" data-testid={`card-meal-${meal.id}`}>
+    <div className="p-4 rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-primary)] hover:bg-[var(--surface-secondary)] transition-colors animate-slide-up" data-testid={`card-meal-${meal.id}`}>
       <div className="flex justify-between items-start mb-3">
-        <div><p className="font-semibold">{meal.menu}</p><p className="text-xs text-muted-foreground mt-0.5">Predicted: <span className="font-medium">{meal.predictedMeals??"—"}</span> · Expected: <span className="font-medium">{meal.expectedPeople}</span></p></div>
-        <Badge variant={meal.status==="completed"?"default":meal.status==="served"?"secondary":"outline"} className="capitalize">{meal.status}</Badge>
+        <div>
+          <p className="font-bold text-sm text-[var(--text-primary)]">{meal.menu}</p>
+          <p className="text-[10px] text-[var(--text-secondary)] font-semibold mt-0.5">
+            AI Target: <span className="text-[var(--text-primary)]">{meal.predictedMeals ?? "—"}</span> · Expected: <span className="text-[var(--text-primary)]">{meal.expectedPeople}</span>
+          </p>
+        </div>
+        <StatusBadge status={meal.status === "served" ? "Processing" : meal.status === "completed" ? "Confirmed" : "Active"} />
       </div>
-      {meal.status!=="completed" && (
-        <div className="space-y-3 pt-3 border-t border-dashed">
+      {!isCompleted && (
+        <div className="space-y-3 pt-3 border-t border-[var(--border-subtle)]">
           <div className="flex gap-2">
-            <div className="flex-1 space-y-1"><Label className="text-xs text-muted-foreground">Actual Served</Label><Input size={1} className="h-8 rounded-lg text-sm" type="number" min="0" value={actual} onChange={e=>setActual(e.target.value)} /></div>
-            <div className="flex-1 space-y-1"><Label className="text-xs text-muted-foreground">Leftover</Label><Input size={1} className="h-8 rounded-lg text-sm" type="number" min="0" value={leftover} onChange={e=>setLeftover(e.target.value)} /></div>
+            <div className="flex-1 space-y-1">
+              <Label className="text-[9px] uppercase tracking-wider font-black text-[var(--text-muted)]">Actual Served</Label>
+              <input
+                className="w-full h-8 rounded-lg text-xs bg-[var(--surface-secondary)] border border-[var(--border-strong)] px-2.5 font-bold focus:outline-none focus:border-[var(--brand-accent)]/50 text-[var(--text-primary)]"
+                type="number" min="0" value={actual} onChange={e => setActual(e.target.value)}
+              />
+            </div>
+            <div className="flex-1 space-y-1">
+              <Label className="text-[9px] uppercase tracking-wider font-black text-[var(--text-muted)]">Leftover</Label>
+              <input
+                className="w-full h-8 rounded-lg text-xs bg-[var(--surface-secondary)] border border-[var(--border-strong)] px-2.5 font-bold focus:outline-none focus:border-[var(--brand-accent)]/50 text-[var(--text-primary)]"
+                type="number" min="0" value={leftover} onChange={e => setLeftover(e.target.value)}
+              />
+            </div>
           </div>
-          {Number(leftover)>=10 && !meal.ngoNotified && <p className="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 rounded-lg px-3 py-1.5 border border-amber-200 dark:border-amber-700">⚡ Auto-NGO notify on save (≥10 meals)</p>}
+          {Number(leftover) >= 10 && !meal.ngoNotified && (
+            <div className="text-[10px] font-bold text-[var(--status-warning-text)] bg-[var(--status-warning-bg)] rounded-lg px-3 py-2 border border-[var(--status-warning)]/20">
+              ⚡ Auto-NGO notification will be triggered on save
+            </div>
+          )}
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="flex-1 rounded-lg" onClick={handleReport} disabled={onReport.isPending}>Save</Button>
-            <Button size="sm" className="flex-1 rounded-lg" onClick={handleNotify} disabled={onNotify.isPending||!meal.leftoverMeals||meal.ngoNotified}>{meal.ngoNotified?"✅ Notified":"📲 Notify NGO"}</Button>
+            <GlowButton size="sm" variant="outline" className="flex-1 rounded-xl text-xs h-9 border-[var(--border-strong)] bg-[var(--surface-primary)]" onClick={handleReport} disabled={onReport.isPending}>Save Log</GlowButton>
+            <GlowButton size="sm" className="flex-1 rounded-xl text-xs h-9 glow-primary" onClick={handleNotify} disabled={onNotify.isPending || !meal.leftoverMeals || meal.ngoNotified}>
+              {meal.ngoNotified ? "Notified" : "Notify NGO"}
+            </GlowButton>
           </div>
         </div>
       )}
