@@ -1,160 +1,159 @@
-import { Canvas, useFrame } from "@react-three/fiber";
-import { 
-  OrbitControls, 
-  Float, 
-  Text, 
-  PerspectiveCamera, 
-  useFBX, 
-  Environment, 
-  ContactShadows,
-  Html,
-  useProgress
-} from "@react-three/drei";
-import { useRef, Suspense, useEffect } from "react";
-import * as THREE from "three";
-import { gsap, ScrollTrigger } from "@/animations/gsap";
-
-function Loader() {
-  const { progress } = useProgress();
-  return (
-    <Html center>
-      <div className="flex flex-col items-center gap-3 w-32">
-        <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-primary transition-all duration-300" 
-            style={{ width: `${progress}%` }} 
-          />
-        </div>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-          Loading 3D...
-        </span>
-      </div>
-    </Html>
-  );
-}
-
-function FoodContainerModel() {
-  const fbx = useFBX("/models/food-container.fbx");
-  const groupRef = useRef<THREE.Group>(null);
-
-  // Apply custom material to make it look premium
-  fbx.traverse((child) => {
-    if ((child as THREE.Mesh).isMesh) {
-      const mesh = child as THREE.Mesh;
-      mesh.material = new THREE.MeshStandardMaterial({
-        color: "#10b981",
-        roughness: 0.1,
-        metalness: 0.8,
-        emissive: "#059669",
-        emissiveIntensity: 0.2,
-      });
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-    }
-  });
-
-  return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
-      <primitive 
-        object={fbx} 
-        scale={0.08} 
-        ref={groupRef}
-        position={[0, -1, 0]} 
-        rotation={[0, Math.PI / 4, 0]}
-      />
-    </Float>
-  );
-}
-
-function Ecosystem() {
-  return (
-    <group>
-      <FoodContainerModel />
-      
-      {/* Floating Labels */}
-      <Text
-        position={[2.5, 1, 0]}
-        fontSize={0.25}
-        color="#10b981"
-        font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf"
-      >
-        Surplus
-      </Text>
-      <Text
-        position={[-2.5, -1, 0]}
-        fontSize={0.25}
-        color="#3b82f6"
-      >
-        Redistributed
-      </Text>
-
-      {/* Decorative Particles */}
-      {Array.from({ length: 20 }).map((_, i) => (
-        <Float key={i} speed={1} rotationIntensity={2} floatIntensity={2}>
-          <mesh position={[
-            (Math.random() - 0.5) * 6,
-            (Math.random() - 0.5) * 6,
-            (Math.random() - 0.5) * 6
-          ]}>
-            <boxGeometry args={[0.05, 0.05, 0.05]} />
-            <meshStandardMaterial color="#10b981" emissive="#10b981" emissiveIntensity={0.5} />
-          </mesh>
-        </Float>
-      ))}
-    </group>
-  );
-}
+import { useRef } from "react";
+import { motion } from "framer-motion";
+import { Building2, Zap, HeartHandshake, Utensils } from "lucide-react";
+import { transitionEase, transitionSpring } from "@/lib/motion";
 
 export default function Hero3D() {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    // Parallax effect on scroll
-    gsap.to(containerRef.current, {
-      y: 50,
-      rotateX: 5,
-      scale: 0.98,
-      ease: "none",
-      scrollTrigger: {
-        trigger: containerRef.current,
-        start: "top center",
-        end: "bottom top",
-        scrub: true,
-      }
-    });
-
-    // Floating animation for the whole container
-    gsap.to(containerRef.current, {
-      y: "-=20",
-      duration: 3,
-      repeat: -1,
-      yoyo: true,
-      ease: "power1.inOut"
-    });
-  }, []);
-
   return (
-    <div ref={containerRef} className="w-full h-[400px] md:h-[600px] relative">
-      <Canvas shadows dpr={[1, 2]}>
-        <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={40} />
-        <Suspense fallback={<Loader />}>
-          <ambientLight intensity={0.5} />
-          <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={2} castShadow />
-          <pointLight position={[-10, -10, -10]} intensity={1} color="#3b82f6" />
-          
-          <Ecosystem />
-          
-          <ContactShadows position={[0, -2.5, 0]} opacity={0.4} scale={10} blur={2.5} far={4} />
-          <Environment preset="city" />
-          <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={0.5} />
-        </Suspense>
-      </Canvas>
-      
-      {/* Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/20 blur-[100px] rounded-full -z-10 animate-pulse" />
+    <div 
+      ref={containerRef} 
+      className="w-full max-w-lg aspect-square relative flex items-center justify-center select-none"
+    >
+      {/* Premium Backlight Glows */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/3 w-48 h-48 bg-emerald-500/5 rounded-full blur-[80px] pointer-events-none" />
+
+      {/* Main Animated Ecosystem Vector */}
+      <div className="w-full h-full relative p-6 animate-float">
+        <svg 
+          viewBox="0 0 400 400" 
+          fill="none" 
+          xmlns="http://www.w3.org/2000/svg" 
+          className="w-full h-full drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative z-10"
+        >
+          {/* Connection Lines (Paths) */}
+          {/* PG Kitchen -> AI Core */}
+          <path 
+            d="M 100 200 Q 200 130 200 200" 
+            stroke="rgba(16, 185, 129, 0.25)" 
+            strokeWidth="3" 
+            strokeLinecap="round"
+          />
+          <motion.path 
+            d="M 100 200 Q 200 130 200 200" 
+            stroke="url(#trail-primary)" 
+            strokeWidth="3.5" 
+            strokeLinecap="round"
+            strokeDasharray="40 160"
+            animate={{
+              strokeDashoffset: [200, 0]
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
+
+          {/* Resident Confirmed -> AI Core */}
+          <path 
+            d="M 200 100 Q 200 150 200 200" 
+            stroke="rgba(16, 185, 129, 0.2)" 
+            strokeWidth="2.5" 
+            strokeLinecap="round"
+          />
+          <motion.path 
+            d="M 200 100 Q 200 150 200 200" 
+            stroke="url(#trail-primary)" 
+            strokeWidth="3" 
+            strokeLinecap="round"
+            strokeDasharray="30 120"
+            animate={{
+              strokeDashoffset: [150, 0]
+            }}
+            transition={{
+              duration: 2.2,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
+
+          {/* AI Core -> NGO Pickup */}
+          <path 
+            d="M 200 200 Q 200 270 300 200" 
+            stroke="rgba(16, 185, 129, 0.25)" 
+            strokeWidth="3" 
+            strokeLinecap="round"
+          />
+          <motion.path 
+            d="M 200 200 Q 200 270 300 200" 
+            stroke="url(#trail-accent)" 
+            strokeWidth="3.5" 
+            strokeLinecap="round"
+            strokeDasharray="40 160"
+            animate={{
+              strokeDashoffset: [200, 0]
+            }}
+            transition={{
+              duration: 3.2,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
+
+          {/* SVG Defs for Premium Gradients */}
+          <defs>
+            <linearGradient id="trail-primary" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(16, 185, 129, 0)" />
+              <stop offset="50%" stopColor="rgba(16, 185, 129, 1)" />
+              <stop offset="100%" stopColor="rgba(52, 211, 153, 0)" />
+            </linearGradient>
+            <linearGradient id="trail-accent" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(52, 211, 153, 0)" />
+              <stop offset="50%" stopColor="rgba(16, 185, 129, 1)" />
+              <stop offset="100%" stopColor="rgba(59, 130, 246, 0)" />
+            </linearGradient>
+            
+            <radialGradient id="glow-center" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="rgba(16, 185, 129, 0.3)" />
+              <stop offset="100%" stopColor="rgba(16, 185, 129, 0)" />
+            </radialGradient>
+          </defs>
+
+          {/* Central Glow Field */}
+          <circle cx="200" cy="200" r="80" fill="url(#glow-center)" className="animate-pulse" />
+        </svg>
+
+        {/* UI Overlay Nodes (Lucide + Tailwind glass surfaces) */}
+        
+        {/* Node 1: PG Owner Kitchen (Left) */}
+        <div className="absolute left-[5%] top-[40%] -translate-y-1/2 flex flex-col items-center group">
+          <div className="w-14 h-14 rounded-2xl bg-zinc-950/80 border border-white/5 shadow-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:border-primary/40">
+            <Building2 size={22} className="text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
+          <span className="text-[9px] uppercase tracking-widest font-black text-muted-foreground mt-2 group-hover:text-foreground transition-colors">PG Owner</span>
+        </div>
+
+        {/* Node 2: Residents Input (Top) */}
+        <div className="absolute left-1/2 top-[5%] -translate-x-1/2 flex flex-col items-center group">
+          <div className="w-12 h-12 rounded-2xl bg-zinc-950/80 border border-white/5 shadow-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:border-primary/40">
+            <Utensils size={18} className="text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
+          <span className="text-[9px] uppercase tracking-widest font-black text-muted-foreground mt-2 group-hover:text-foreground transition-colors">Residents</span>
+        </div>
+
+        {/* Node 3: NGO Network (Right) */}
+        <div className="absolute right-[5%] top-[40%] -translate-y-1/2 flex flex-col items-center group">
+          <div className="w-14 h-14 rounded-2xl bg-zinc-950/80 border border-white/5 shadow-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:border-primary/40">
+            <HeartHandshake size={22} className="text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
+          <span className="text-[9px] uppercase tracking-widest font-black text-muted-foreground mt-2 group-hover:text-foreground transition-colors">NGO Network</span>
+        </div>
+
+        {/* Central Core: MealSync AI Hub */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+          <div className="relative">
+            {/* Pulsing Backlight */}
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
+            <div className="w-20 h-20 rounded-[2.5rem] bg-gradient-to-br from-primary to-emerald-600 border border-white/10 flex items-center justify-center shadow-[0_20px_50px_rgba(16,185,129,0.3)] relative z-10 transition-transform duration-500 hover:scale-105">
+              <Zap size={32} className="text-primary-foreground animate-pulse" />
+            </div>
+          </div>
+          <span className="text-[10px] uppercase tracking-widest font-black text-primary mt-3 text-shadow shadow-primary/20">MealSync AI</span>
+        </div>
+      </div>
     </div>
   );
 }
-
