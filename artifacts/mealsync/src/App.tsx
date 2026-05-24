@@ -13,6 +13,7 @@ import LandingPage from "@/pages/landing";
 import OwnerDashboard from "@/pages/dashboard/owner";
 import NgoDashboard from "@/pages/dashboard/ngo";
 import ResidentDashboard from "@/pages/dashboard/resident";
+import SettingsPage from "@/pages/dashboard/settings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,6 +68,9 @@ function Router() {
         </Route>
         <Route path="/dashboard/resident">
           {() => <ProtectedRoute component={ResidentDashboard} allowedRole="resident" />}
+        </Route>
+        <Route path="/dashboard/settings">
+          {() => <ProtectedRoute component={SettingsPage} />}
         </Route>
         
         <Route component={NotFound} />
