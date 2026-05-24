@@ -9,6 +9,7 @@ import { useLogin } from "@workspace/api-client-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Mail, Lock, Loader2, Wand2, ArrowRight, Eye, EyeOff, CheckCircle2, AlertCircle } from "lucide-react";
+import { GlassCard, GlowButton } from "@/components/ui/premium";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -58,7 +59,7 @@ export default function Login() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <Card className="glass border-white/10 overflow-hidden shadow-2xl">
+        <GlassCard className="overflow-hidden shadow-2xl p-0 md:p-0">
           <CardHeader className="text-center pb-2">
             <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 glow-primary">
               <Lock className="text-primary" size={32} />
@@ -130,10 +131,10 @@ export default function Login() {
                 </motion.div>
               )}
             </CardContent>
-            <CardFooter className="flex flex-col gap-4 pt-2">
-              <Button
+            <CardFooter className="flex flex-col gap-4 pt-2 pb-8 px-6">
+              <GlowButton
                 type="submit"
-                className="w-full h-12 text-lg font-bold glow-primary"
+                className="w-full h-12 text-lg font-bold"
                 disabled={loginMutation.isPending}
               >
                 {loginMutation.isPending ? (
@@ -141,7 +142,7 @@ export default function Login() {
                 ) : (
                   <>Login <ArrowRight className="ml-2" size={20} /></>
                 )}
-              </Button>
+              </GlowButton>
               
               <div className="relative w-full py-2">
                 <div className="absolute inset-0 flex items-center">
@@ -174,7 +175,7 @@ export default function Login() {
               </div>
             </CardFooter>
           </form>
-        </Card>
+        </GlassCard>
       </motion.div>
     </div>
   );

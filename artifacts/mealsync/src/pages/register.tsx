@@ -23,6 +23,7 @@ import {
   Eye,
   EyeOff
 } from "lucide-react";
+import { GlassCard, GlowButton } from "@/components/ui/premium";
 
 interface RegisteredPg {
   id: number;
@@ -218,8 +219,8 @@ export default function Register() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
             >
-              <Card className="glass border-white/10 overflow-hidden">
-                <CardHeader className="text-center pb-2">
+              <GlassCard className="border-white/10 overflow-hidden p-0 md:p-0">
+                <CardHeader className="text-center pb-2 pt-6">
                   <CardTitle className="text-3xl font-black">Account Details</CardTitle>
                   <CardDescription>Enter your credentials to get started</CardDescription>
                 </CardHeader>
@@ -306,15 +307,15 @@ export default function Register() {
                     </Button>
                   </div>
                 </CardContent>
-                <CardFooter className="flex justify-between gap-4 border-t border-white/10 pt-6">
+                <CardFooter className="flex justify-between gap-4 border-t border-white/10 pt-6 pb-8 px-6">
                   <Button variant="ghost" onClick={prevStep} className="flex items-center gap-2 h-12 px-6">
                     <ArrowLeft size={18} /> Back
                   </Button>
-                  <Button onClick={nextStep} disabled={!name || !email || !password} className="flex items-center gap-2 h-12 px-8 glow-primary">
+                  <GlowButton onClick={nextStep} disabled={!name || !email || !password} className="flex items-center gap-2 h-12 px-8">
                     Next <ArrowRight size={18} />
-                  </Button>
+                  </GlowButton>
                 </CardFooter>
-              </Card>
+              </GlassCard>
             </motion.div>
           )}
 
@@ -325,8 +326,8 @@ export default function Register() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
             >
-              <Card className="glass border-white/10 overflow-hidden">
-                <CardHeader className="text-center pb-2">
+              <GlassCard className="border-white/10 overflow-hidden p-0 md:p-0">
+                <CardHeader className="text-center pb-2 pt-6">
                   <CardTitle className="text-3xl font-black">Final Details</CardTitle>
                   <CardDescription>Tell us a bit more about your {role}</CardDescription>
                 </CardHeader>
@@ -412,14 +413,14 @@ export default function Register() {
                     <p className="text-sm text-destructive font-bold text-center">{error}</p>
                   )}
                 </CardContent>
-                <CardFooter className="flex justify-between gap-4 border-t border-white/10 pt-6">
+                <CardFooter className="flex justify-between gap-4 border-t border-white/10 pt-6 pb-8 px-6">
                   <Button variant="ghost" onClick={prevStep} className="flex items-center gap-2 h-12 px-6">
                     <ArrowLeft size={18} /> Back
                   </Button>
-                  <Button 
+                  <GlowButton 
                     onClick={handleSubmit} 
                     disabled={registrationDisabled} 
-                    className="flex items-center gap-2 h-12 px-10 glow-primary font-bold"
+                    className="flex items-center gap-2 h-12 px-10 font-bold"
                   >
                     {registerMutation.isPending ? (
                       <>
@@ -430,9 +431,9 @@ export default function Register() {
                         Complete Registration <CheckCircle2 size={18} />
                       </>
                     )}
-                  </Button>
+                  </GlowButton>
                 </CardFooter>
-              </Card>
+              </GlassCard>
             </motion.div>
           )}
         </AnimatePresence>
