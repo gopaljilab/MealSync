@@ -1,6 +1,7 @@
 import { gsap, ScrollTrigger } from './gsap';
 
 export const initCounterAnimations = () => {
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const counters = document.querySelectorAll('.counter');
 
   counters.forEach((counter) => {
@@ -10,7 +11,7 @@ export const initCounterAnimations = () => {
 
     gsap.to(obj, {
       value: targetValue,
-      duration: 2,
+      duration: prefersReducedMotion ? 0 : 2,
       ease: 'power2.out',
       scrollTrigger: {
         trigger: counter,

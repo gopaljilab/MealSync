@@ -1,0 +1,146 @@
+/* Spacing, Radius, and Semantic Tokens for MealSync Elite SaaS Design */
+
+:root {
+  /* 8px Base Spacing Scale */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+  --space-10: 2.5rem;  /* 40px */
+  --space-12: 3rem;    /* 48px */
+  --space-16: 4rem;    /* 64px */
+  --space-20: 5rem;    /* 80px */
+  --space-24: 6rem;    /* 96px */
+
+  /* Premium Border Radius Scale */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-3xl: 32px;
+  --radius-4xl: 40px;
+  --radius-full: 9999px;
+
+  /* Typography Scales */
+  --tracking-display: -0.04em;
+  --tracking-heading: -0.02em;
+  --tracking-body: -0.005em;
+
+  /* =================================================================
+     SEMANTIC TOKEN SYSTEM (LIGHT THEME BASE) 
+     Inspired by Stripe/Linear light mode for data density
+  ================================================================= */
+  
+  --bg-canvas: #f8fafc; /* slate-50 */
+  --surface-primary: #ffffff;
+  --surface-secondary: #f1f5f9; /* slate-100 */
+  --surface-elevated: #ffffff;
+  
+  --text-primary: #0f172a; /* slate-900 */
+  --text-secondary: #475569; /* slate-600 */
+  --text-muted: #94a3b8; /* slate-400 */
+  
+  --border-subtle: #f1f5f9;
+  --border-strong: #e2e8f0;
+  
+  --status-success: #10b981; /* emerald-500 */
+  --status-success-bg: #d1fae5;
+  --status-success-text: #065f46;
+  
+  --status-warning: #f59e0b; /* amber-500 */
+  --status-warning-bg: #fef3c7;
+  --status-warning-text: #92400e;
+  
+  --status-danger: #ef4444; /* red-500 */
+  --status-danger-bg: #fee2e2;
+  --status-danger-text: #991b1b;
+  
+  --status-info: #3b82f6; /* blue-500 */
+  --status-info-bg: #dbeafe;
+  --status-info-text: #1e40af;
+
+  --brand-accent: #10b981; /* Premium Emerald */
+
+  /* Legacy HSL Variables for Shadcn/Tailwind integration */
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 160 84% 39%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 160 84% 39%;
+}
+
+/* =================================================================
+   CINEMATIC DARK THEME
+   Inspired by Vercel/Raycast for the Landing Page atmosphere
+================================================================= */
+[data-theme="dark"], .dark {
+  --bg-canvas: #0B1120;
+  --surface-primary: #111827; /* gray-900 */
+  --surface-secondary: #1F2937; /* gray-800 */
+  --surface-elevated: #1F2937;
+  
+  --text-primary: #F9FAFB;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+  
+  --border-subtle: #1F2937;
+  --border-strong: #374151;
+  
+  --status-success: #10b981;
+  --status-success-bg: rgba(16, 185, 129, 0.1);
+  --status-success-text: #34d399;
+  
+  --status-warning: #f59e0b;
+  --status-warning-bg: rgba(245, 158, 11, 0.1);
+  --status-warning-text: #fbbf24;
+  
+  --status-danger: #ef4444;
+  --status-danger-bg: rgba(239, 68, 68, 0.1);
+  --status-danger-text: #f87171;
+  
+  --status-info: #3b82f6;
+  --status-info-bg: rgba(59, 130, 246, 0.1);
+  --status-info-text: #60a5fa;
+
+  --brand-accent: #10b981;
+
+  /* Legacy HSL Variables */
+  --background: 222 47% 8.5%;
+  --foreground: 0 0% 98%;
+  --card: 222 47% 11%;
+  --card-foreground: 0 0% 98%;
+  --popover: 222 47% 11%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 160 84% 39%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 217 32% 17%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 217 32% 17%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 217 32% 17%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 0 85% 97%;
+  --border: 217 32% 17%;
+  --input: 217 32% 17%;
+  --ring: 160 84% 39%;
+}

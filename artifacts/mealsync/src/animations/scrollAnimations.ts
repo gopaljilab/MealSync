@@ -1,6 +1,9 @@
 import { gsap, ScrollTrigger } from './gsap';
 
 export const initScrollReveal = () => {
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReducedMotion) return;
+
   const revealElements = document.querySelectorAll('.reveal');
 
   revealElements.forEach((el) => {
