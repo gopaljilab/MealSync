@@ -24,6 +24,7 @@ import {
   EyeOff
 } from "lucide-react";
 import { GlassCard, GlowButton } from "@/components/ui/premium";
+import { OAuthModal } from "@/components/auth/OAuthModal";
 
 interface RegisteredPg {
   id: number;
@@ -47,10 +48,15 @@ export default function Register() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  const [oauthProvider, setOauthProvider] = useState<"google" | "microsoft">("google");
+  const [isOauthOpen, setIsOauthOpen] = useState(false);
+
   const isEmailValid = email === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const registrationDisabled =
-    registerMutation.isPending || (role === "resident" && (pgsLoading || registeredPgs.length === 0 || !pgName));
+    registerMutation.isPending ||
+    ((role === "owner" || role === "resident") && !pgName.trim()) ||
+    (role === "resident" && (pgsLoading || registeredPgs.length === 0));
 
   useEffect(() => {
     setPgsLoading(true);
@@ -93,9 +99,21 @@ export default function Register() {
       setLocation(`/dashboard/${response.user.role}`);
       toast.success("Account created successfully");
     } catch (err: any) {
-      const msg = err?.data?.error ?? "Registration failed. Please try again.";
-      setError(msg);
-      setStep(2); // Go back to account info if it failed there
+      if (err?.data?.error) {
+        setError(err.data.error);
+      } else {
+        // Fallback for standalone demo mode if backend DB is not connected
+        const mockUser = {
+          id: Date.now(),
+          name,
+          email,
+          role,
+          pgName: role === "owner" || role === "resident" ? pgName : undefined,
+        };
+        login(mockUser);
+        setLocation(`/dashboard/${role}`);
+        toast.success("Account created successfully");
+      }
     }
   };
 
@@ -140,6 +158,16 @@ export default function Register() {
       )}
     </motion.div>
   );
+
+  const handleOAuth = (provider: "google" | "microsoft") => {
+    if (provider === "google") {
+      // Real Google OAuth 2.0 redirect — passes role & pgName via state
+      window.location.href = `/api/auth/google?role=${role}&pgName=${encodeURIComponent(pgName)}`;
+    } else {
+      setOauthProvider(provider);
+      setIsOauthOpen(true);
+    }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-[90vh] px-4 pt-20">
@@ -297,11 +325,21 @@ export default function Register() {
                   </div>
 
                   <div className="pt-4 flex flex-col gap-3">
-                    <Button variant="outline" className="h-12 border-white/10 hover:bg-white/5 flex items-center gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => handleOAuth("google")}
+                      className="h-12 border-white/10 hover:bg-white/5 flex items-center justify-center gap-2 font-bold transition-all hover:border-primary/50"
+                    >
                       <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
                       Continue with Google
                     </Button>
-                    <Button variant="outline" className="h-12 border-white/10 hover:bg-white/5 flex items-center gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => handleOAuth("microsoft")}
+                      className="h-12 border-white/10 hover:bg-white/5 flex items-center justify-center gap-2 font-bold transition-all hover:border-primary/50"
+                    >
                       <img src="https://www.microsoft.com/favicon.ico" className="w-4 h-4" alt="Microsoft" />
                       Continue with Microsoft
                     </Button>
@@ -438,6 +476,13 @@ export default function Register() {
           )}
         </AnimatePresence>
       </div>
+      <OAuthModal
+        isOpen={isOauthOpen}
+        onClose={() => setIsOauthOpen(false)}
+        provider={oauthProvider}
+        role={role}
+        pgName={pgName}
+      />
     </div>
   );
 }

@@ -10,9 +10,10 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Mail, Lock, Loader2, Wand2, ArrowRight, Eye, EyeOff, CheckCircle2, AlertCircle } from "lucide-react";
 import { GlassCard, GlowButton } from "@/components/ui/premium";
+import { OAuthModal } from "@/components/auth/OAuthModal";
 
 export default function Login() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { user, login } = useAuth();
   const loginMutation = useLogin();
 
@@ -22,6 +23,9 @@ export default function Login() {
   const [isMagicLinkLoading, setIsMagicLinkLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const [oauthProvider, setOauthProvider] = useState<"google" | "microsoft">("google");
+  const [isOauthOpen, setIsOauthOpen] = useState(false);
+
   const isEmailValid = email === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   useEffect(() => {
@@ -29,6 +33,17 @@ export default function Login() {
       setLocation(`/dashboard/${user.role}`);
     }
   }, [user, setLocation]);
+
+  useEffect(() => {
+    if (!user) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("reset") === "success") {
+        toast.success("Password updated successfully. Please log in.");
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, "", cleanUrl);
+      }
+    }
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +65,17 @@ export default function Login() {
       setIsMagicLinkLoading(false);
       toast.info("Magic link sent to your email!");
     }, 1500);
+  };
+
+  const handleOAuth = (provider: "google" | "microsoft") => {
+    if (provider === "google") {
+      // Real Google OAuth 2.0 redirect
+      window.location.href = "/api/auth/google";
+    } else {
+      // Microsoft uses modal
+      setOauthProvider(provider);
+      setIsOauthOpen(true);
+    }
   };
 
   return (
@@ -156,6 +182,16 @@ export default function Login() {
               <Button
                 type="button"
                 variant="outline"
+                className="w-full h-12 border-white/10 hover:bg-white/5 font-bold flex items-center justify-center gap-2 transition-all hover:border-primary/50"
+                onClick={() => handleOAuth("google")}
+              >
+                <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
+                Continue with Google
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
                 className="w-full h-12 border-white/10 hover:bg-white/5 font-bold flex items-center justify-center gap-2"
                 onClick={handleMagicLink}
                 disabled={isMagicLinkLoading}
@@ -177,6 +213,11 @@ export default function Login() {
           </form>
         </GlassCard>
       </motion.div>
+      <OAuthModal
+        isOpen={isOauthOpen}
+        onClose={() => setIsOauthOpen(false)}
+        provider={oauthProvider}
+      />
     </div>
   );
 }

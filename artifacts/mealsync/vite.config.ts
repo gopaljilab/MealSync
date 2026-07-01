@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
@@ -7,9 +7,15 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 const rawPort = process.env.PORT ?? "5173";
 const port = Number(rawPort);
 const basePath = process.env.BASE_PATH ?? "/";
+export default defineConfig(async ({ mode }) => {
+  const rootEnv = loadEnv(mode, path.resolve(import.meta.dirname, "..", ".."), "");
+  const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY ?? rootEnv.GOOGLE_MAPS_API_KEY ?? "";
 
-export default defineConfig({
+  return {
   base: basePath,
+  define: {
+    __GOOGLE_MAPS_API_KEY__: JSON.stringify(googleMapsApiKey),
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -60,4 +66,5 @@ export default defineConfig({
     host: "0.0.0.0",
     allowedHosts: true,
   },
+  };
 });

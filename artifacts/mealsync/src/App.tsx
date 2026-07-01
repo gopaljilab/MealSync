@@ -14,6 +14,8 @@ import OwnerDashboard from "@/pages/dashboard/owner";
 import NgoDashboard from "@/pages/dashboard/ngo";
 import ResidentDashboard from "@/pages/dashboard/resident";
 import SettingsPage from "@/pages/dashboard/settings";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +61,8 @@ function Router() {
         <Route path="/" component={RootRoute} />
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
+        <Route path="/forgot-password" component={ForgotPassword} />
+        <Route path="/reset-password" component={ResetPassword} />
         
         <Route path="/dashboard/owner">
           {() => <ProtectedRoute component={OwnerDashboard} allowedRole="owner" />}

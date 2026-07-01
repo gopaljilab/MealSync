@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow, differenceInMinutes } from "date-fns";
 import { useCountUp } from "@/hooks/useCountUp";
+import { GoogleLocationMap } from "@/components/maps/GoogleLocationMap";
 import {
   SectionContainer,
   SectionHeading,
@@ -230,37 +231,10 @@ export default function NgoDashboard() {
         }
       />
 
-      {/* Simulated Map View - Ultra Premium Visuals */}
+      {/* Interactive Google Maps view */}
       {mapView && sorted && sorted.length > 0 && (
         <GlassCard className="overflow-hidden p-0 border-[var(--border-strong)]" data-testid="card-map-view">
-          <div className="p-5 border-b border-[var(--border-strong)] bg-[var(--surface-secondary)] flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-black uppercase tracking-wider text-[var(--text-primary)]">Redistribution Mapping</h3>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">Real-time simulation of logistics nodes and routes</p>
-            </div>
-            <span className="text-[9px] font-black uppercase tracking-wider bg-[var(--status-info-bg)] text-[var(--status-info)] border border-[var(--status-info)]/20 px-2.5 py-1 rounded-full flex items-center gap-1.5 animate-pulse">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--status-info)]" />
-              Live Route
-            </span>
-          </div>
-          <div className="relative bg-[var(--surface-primary)] h-60 overflow-hidden border-b border-[var(--border-subtle)]">
-            <div className="absolute inset-0 grid grid-cols-8 grid-rows-4 opacity-[0.05]">
-              {Array.from({ length: 32 }).map((_, i) => <div key={i} className="border border-[var(--text-primary)]" />)}
-            </div>
-            {sorted.map((req, i) => {
-              const u = getUrgency(req.pickupTime);
-              const x = 15 + (i % 4) * 22 + Math.sin(i) * 5, y = 20 + Math.floor(i / 4) * 35;
-              return (
-                <div key={req.id} className="absolute flex flex-col items-center animate-bounce-in" style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${i * 100}ms` }}>
-                  <div className={`h-9 w-9 rounded-full flex items-center justify-center text-white text-xs font-black shadow-md border border-white/20 relative ${u.level === "urgent" ? "bg-[var(--status-danger)]" : u.level === "moderate" ? "bg-[var(--status-warning)]" : "bg-[var(--brand-accent)]"}`}>
-                    <span className="absolute inset-0 rounded-full animate-ping opacity-20" />
-                    <span className="relative">{req.availableMeals}</span>
-                  </div>
-                  <div className="text-[10px] font-bold mt-2 bg-[var(--surface-elevated)] border border-[var(--border-strong)] px-2 py-0.5 rounded-full shadow-sm text-[var(--text-primary)] whitespace-nowrap">{req.pgName}</div>
-                </div>
-              );
-            })}
-          </div>
+          <GoogleLocationMap />
         </GlassCard>
       )}
 

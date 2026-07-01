@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { Logo } from "./ui/Logo";
 import { useAuth } from "./auth/AuthContext";
 import { Button } from "./ui/button";
 import { useLogout, useHealthCheck, getHealthCheckQueryKey } from "@workspace/api-client-react";
@@ -47,11 +48,8 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
         <div className="flex flex-col h-full">
           {/* Brand & Workspace */}
           <div className="h-16 flex items-center px-6 border-b border-[var(--border-subtle)] justify-between">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 bg-[var(--brand-accent)] rounded-lg flex items-center justify-center shadow-sm">
-                <span className="text-white font-bold text-lg">M</span>
-              </div>
-              <span className="font-bold text-lg tracking-tight">MealSync</span>
+            <Link href="/">
+              <Logo size="sm" showText={true} />
             </Link>
             <button className="lg:hidden p-1 text-[var(--text-muted)]" onClick={() => setIsSidebarOpen(false)}>
               <X size={20} />
@@ -208,13 +206,8 @@ function LandingLayout({ children }: { children: React.ReactNode }) {
       <header ref={headerRef} className="fixed top-0 w-full z-50 bg-transparent border-transparent">
         <div className="container mx-auto px-4 md:px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-10 h-10 bg-[var(--brand-accent)] rounded-xl flex items-center justify-center shadow-lg shadow-[var(--brand-accent)]/20 group-hover:scale-110 transition-transform">
-                <span className="text-white font-bold text-xl">M</span>
-              </div>
-              <span className="font-bold text-2xl tracking-tight bg-gradient-to-r from-[var(--text-primary)] to-[var(--text-secondary)] bg-clip-text text-transparent">
-                MealSync
-              </span>
+            <Link href="/">
+              <Logo size="md" showText={true} />
             </Link>
           </div>
 

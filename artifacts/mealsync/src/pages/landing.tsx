@@ -2,7 +2,8 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, AnimatePresence } from "framer-motion";
+import { Logo } from "@/components/ui/Logo";
 import {
   ArrowRight,
   ShieldCheck,
@@ -503,9 +504,8 @@ export default function LandingPage() {
       <footer className="py-16 px-4 md:px-6 border-t border-black/5 dark:border-white/5 bg-white/[0.005] reveal" data-reveal-direction="up">
         <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-12">
           <div className="col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center font-black text-xl text-white shadow-glow select-none">M</div>
-              <span className="text-xl font-black tracking-tighter">MealSync</span>
+            <div className="mb-6">
+              <Logo size="md" showText={true} />
             </div>
             <p className="text-muted-foreground text-base font-medium max-w-sm leading-relaxed">
               Empowering shared-living spaces through predictive inventory intelligence. Redefining waste as opportunity.

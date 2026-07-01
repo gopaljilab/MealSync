@@ -1,5 +1,14 @@
+import path from "path";
 import app from "./app";
 import { logger } from "./lib/logger";
+
+try {
+  process.loadEnvFile(path.join(import.meta.dirname, "../../.env"));
+} catch {
+  try {
+    process.loadEnvFile();
+  } catch {}
+}
 
 const rawPort = process.env["PORT"];
 
