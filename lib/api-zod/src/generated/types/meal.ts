@@ -9,7 +9,14 @@ import type { MealStatus } from "./mealStatus";
 
 export interface Meal {
   id: number;
-  menu: string;
+  menu?: string;
+  breakfastMenu?: string;
+  breakfastTime?: string;
+  lunchMenu?: string;
+  dinnerMenu?: string;
+  lunchTime?: string;
+  dinnerTime?: string;
+  notes?: string;
   expectedPeople: number;
   predictedMeals?: number;
   actualServed?: number;

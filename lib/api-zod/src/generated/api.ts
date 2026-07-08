@@ -67,14 +67,21 @@ export const GetMeResponse = zod.object({
  */
 export const ListMealsResponseItem = zod.object({
   id: zod.number(),
-  menu: zod.string(),
+  menu: zod.string().optional(),
+  breakfastMenu: zod.string().optional(),
+  breakfastTime: zod.string().optional(),
+  lunchMenu: zod.string().optional(),
+  dinnerMenu: zod.string().optional(),
+  lunchTime: zod.string().optional(),
+  dinnerTime: zod.string().optional(),
+  notes: zod.string().optional(),
   expectedPeople: zod.number(),
   predictedMeals: zod.number().optional(),
   actualServed: zod.number().optional(),
   leftoverMeals: zod.number().optional(),
   date: zod.string(),
   ngoNotified: zod.boolean().optional(),
-  status: zod.enum(["pending", "served", "completed"]),
+  status: zod.enum(["pending", "served", "completed", "draft", "published"]),
 });
 export const ListMealsResponse = zod.array(ListMealsResponseItem);
 
@@ -84,6 +91,69 @@ export const ListMealsResponse = zod.array(ListMealsResponseItem);
 export const CreateMealBody = zod.object({
   menu: zod.string(),
   expectedPeople: zod.number(),
+});
+
+/**
+ * @summary Get today's menu for the logged-in PG owner
+ */
+export const GetTodaysMenuResponse = zod.object({
+  id: zod.number(),
+  menu: zod.string().optional(),
+  breakfastMenu: zod.string().optional(),
+  breakfastTime: zod.string().optional(),
+  lunchMenu: zod.string().optional(),
+  dinnerMenu: zod.string().optional(),
+  lunchTime: zod.string().optional(),
+  dinnerTime: zod.string().optional(),
+  notes: zod.string().optional(),
+  expectedPeople: zod.number(),
+  predictedMeals: zod.number().optional(),
+  actualServed: zod.number().optional(),
+  leftoverMeals: zod.number().optional(),
+  date: zod.string(),
+  ngoNotified: zod.boolean().optional(),
+  status: zod.enum(["pending", "served", "completed", "draft", "published"]),
+});
+
+/**
+ * @summary Delete today's menu if it's in draft status
+ */
+export const DeleteTodaysMenuResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
+ * @summary Create or update today's menu
+ */
+export const UpsertTodaysMenuBody = zod.object({
+  breakfastMenu: zod.string().optional(),
+  breakfastTime: zod.string().optional(),
+  lunchMenu: zod.string(),
+  dinnerMenu: zod.string(),
+  lunchTime: zod.string(),
+  dinnerTime: zod.string(),
+  expectedPeople: zod.number(),
+  notes: zod.string().optional(),
+  status: zod.enum(["draft", "published"]),
+});
+
+export const UpsertTodaysMenuResponse = zod.object({
+  id: zod.number(),
+  menu: zod.string().optional(),
+  breakfastMenu: zod.string().optional(),
+  breakfastTime: zod.string().optional(),
+  lunchMenu: zod.string().optional(),
+  dinnerMenu: zod.string().optional(),
+  lunchTime: zod.string().optional(),
+  dinnerTime: zod.string().optional(),
+  notes: zod.string().optional(),
+  expectedPeople: zod.number(),
+  predictedMeals: zod.number().optional(),
+  actualServed: zod.number().optional(),
+  leftoverMeals: zod.number().optional(),
+  date: zod.string(),
+  ngoNotified: zod.boolean().optional(),
+  status: zod.enum(["pending", "served", "completed", "draft", "published"]),
 });
 
 /**
@@ -113,14 +183,21 @@ export const ReportLeftoverBody = zod.object({
 
 export const ReportLeftoverResponse = zod.object({
   id: zod.number(),
-  menu: zod.string(),
+  menu: zod.string().optional(),
+  breakfastMenu: zod.string().optional(),
+  breakfastTime: zod.string().optional(),
+  lunchMenu: zod.string().optional(),
+  dinnerMenu: zod.string().optional(),
+  lunchTime: zod.string().optional(),
+  dinnerTime: zod.string().optional(),
+  notes: zod.string().optional(),
   expectedPeople: zod.number(),
   predictedMeals: zod.number().optional(),
   actualServed: zod.number().optional(),
   leftoverMeals: zod.number().optional(),
   date: zod.string(),
   ngoNotified: zod.boolean().optional(),
-  status: zod.enum(["pending", "served", "completed"]),
+  status: zod.enum(["pending", "served", "completed", "draft", "published"]),
 });
 
 /**

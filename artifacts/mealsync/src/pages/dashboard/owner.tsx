@@ -4,6 +4,8 @@ import {
   useGetGreenScore, getGetGreenScoreQueryKey,
   useGetDailyTrends, getGetDailyTrendsQueryKey,
   useListMeals, getListMealsQueryKey,
+  useGetTodaysMenu, getGetTodaysMenuQueryKey,
+  useUpsertTodaysMenu, useDeleteTodaysMenu,
   useCreateMeal, usePredictMeal, useReportLeftover, useNotifyNgo, Meal,
 } from "@workspace/api-client-react";
 import { toast } from "sonner";
@@ -173,6 +175,185 @@ function WhatIfPlanner({ basePeople }: { basePeople: number }) {
   );
 }
 
+function TodaysMenuCard() {
+  const queryClient = useQueryClient();
+  const { data: menuData, isLoading } = useGetTodaysMenu({ query: { queryKey: getGetTodaysMenuQueryKey() } });
+  const upsert = useUpsertTodaysMenu();
+  const deleteMenu = useDeleteTodaysMenu();
+
+  const [breakfastMenu, setBreakfastMenu] = useState("");
+  const [breakfastTime, setBreakfastTime] = useState("");
+  const [lunchMenu, setLunchMenu] = useState("");
+  const [lunchTime, setLunchTime] = useState("");
+  const [dinnerMenu, setDinnerMenu] = useState("");
+  const [dinnerTime, setDinnerTime] = useState("");
+  const [expectedPeople, setExpectedPeople] = useState("");
+  const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (menuData) {
+      setBreakfastMenu(menuData.breakfastMenu || "");
+      setBreakfastTime(menuData.breakfastTime || "");
+      setLunchMenu(menuData.lunchMenu || "");
+      setDinnerMenu(menuData.dinnerMenu || "");
+      setLunchTime(menuData.lunchTime || "");
+      setDinnerTime(menuData.dinnerTime || "");
+      setExpectedPeople(menuData.expectedPeople ? String(menuData.expectedPeople) : "");
+      setNotes(menuData.notes || "");
+    }
+  }, [menuData]);
+
+  const validate = () => {
+    if ((!breakfastMenu && !lunchMenu && !dinnerMenu) || !expectedPeople) {
+      toast.error("Please provide at least one meal and expected residents");
+      return false;
+    }
+    if (Number(expectedPeople) <= 0) {
+      toast.error("Expected residents must be > 0");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSaveDraft = async () => {
+    if (!validate()) return;
+    try {
+      await upsert.mutateAsync({ data: { breakfastMenu, breakfastTime, lunchMenu, dinnerMenu, lunchTime, dinnerTime, expectedPeople: Number(expectedPeople), notes, status: "draft" }});
+      toast.success("✓ Draft saved");
+      queryClient.invalidateQueries({ queryKey: getGetTodaysMenuQueryKey() });
+    } catch { toast.error("Failed to save draft"); }
+  };
+
+  const handlePublish = async () => {
+    if (!validate()) return;
+    try {
+      await upsert.mutateAsync({ data: { breakfastMenu, breakfastTime, lunchMenu, dinnerMenu, lunchTime, dinnerTime, expectedPeople: Number(expectedPeople), notes, status: "published" }});
+      toast.success("✓ Menu published");
+      queryClient.invalidateQueries({ queryKey: getGetTodaysMenuQueryKey() });
+    } catch { toast.error("Failed to publish menu"); }
+  };
+
+  const handleUpdate = async () => {
+    if (!validate()) return;
+    try {
+      await upsert.mutateAsync({ data: { breakfastMenu, breakfastTime, lunchMenu, dinnerMenu, lunchTime, dinnerTime, expectedPeople: Number(expectedPeople), notes, status: menuData?.status as any || "draft" }});
+      toast.success("✓ Menu updated");
+      queryClient.invalidateQueries({ queryKey: getGetTodaysMenuQueryKey() });
+    } catch { toast.error("Failed to update menu"); }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteMenu.mutateAsync();
+      toast.success("✓ Draft deleted");
+      setBreakfastMenu(""); setBreakfastTime(""); setLunchMenu(""); setDinnerMenu(""); setLunchTime(""); setDinnerTime(""); setExpectedPeople(""); setNotes("");
+      queryClient.invalidateQueries({ queryKey: getGetTodaysMenuQueryKey() });
+      queryClient.setQueryData(getGetTodaysMenuQueryKey(), null);
+    } catch { toast.error("Failed to delete draft"); }
+  };
+
+  const isSaving = upsert.isPending || deleteMenu.isPending;
+  const isDraft = menuData?.status === "draft";
+  const isPublished = menuData?.status === "published";
+  
+  // Assume for now that if it's published, we don't allow edits unless we explicitly want to (based on resident responses).
+  // The user requested context-aware buttons:
+  // New menu: Save Draft, Publish Menu
+  // Draft exists: Update Draft, Publish Menu, Delete Draft
+  // Published menu: Update Menu, (and form read-only if responses exist... since we don't have responses yet, we keep it editable or completely read-only based on the "UX improvement" note)
+  // UX Improvement: "After publishing, make the form read-only and display a status badge (e.g. 🟢 Published)"
+  const readOnly = isPublished;
+
+  if (isLoading) return <GlassCard><PremiumSkeleton className="h-40 w-full" /></GlassCard>;
+
+  return (
+    <GlassCard>
+      <div className="mb-4 flex justify-between items-start">
+        <div>
+          <h3 className="text-base font-black tracking-tight text-[var(--text-primary)] flex items-center gap-2">
+            <Utensils size={16} className="text-[var(--brand-accent)]" />
+            Today's Menu
+          </h3>
+          <p className="text-xs text-[var(--text-secondary)] font-medium mt-0.5">Manage and publish today's meals</p>
+        </div>
+        {isPublished && (
+          <div className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-[var(--status-success-bg)] border border-[var(--status-success)]/20 text-[var(--status-success)] flex items-center gap-1.5 select-none">
+            <span>🟢 Published</span>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="col-span-2 text-xs font-black uppercase tracking-wider text-[var(--brand-accent)] mt-2">🍳 Breakfast</div>
+        <div className="space-y-1">
+          <Label className="text-[9px] uppercase tracking-wider font-black text-[var(--text-muted)]">Menu</Label>
+          <input disabled={readOnly} value={breakfastMenu} onChange={e => setBreakfastMenu(e.target.value)} placeholder="E.g. Poha + Tea" className="w-full h-9 px-3 rounded-lg text-xs bg-[var(--surface-secondary)] border border-[var(--border-strong)] focus:outline-none focus:border-[var(--brand-accent)]/50 text-[var(--text-primary)] disabled:opacity-60" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[9px] uppercase tracking-wider font-black text-[var(--text-muted)]">Time</Label>
+          <input disabled={readOnly} value={breakfastTime} onChange={e => setBreakfastTime(e.target.value)} type="time" className="w-full h-9 px-3 rounded-lg text-xs bg-[var(--surface-secondary)] border border-[var(--border-strong)] focus:outline-none focus:border-[var(--brand-accent)]/50 text-[var(--text-primary)] disabled:opacity-60" />
+        </div>
+
+        <div className="col-span-2 text-xs font-black uppercase tracking-wider text-[var(--brand-accent)] mt-2">🍛 Lunch</div>
+        <div className="space-y-1">
+          <Label className="text-[9px] uppercase tracking-wider font-black text-[var(--text-muted)]">Menu</Label>
+          <input disabled={readOnly} value={lunchMenu} onChange={e => setLunchMenu(e.target.value)} placeholder="E.g. Rajma Chawal" className="w-full h-9 px-3 rounded-lg text-xs bg-[var(--surface-secondary)] border border-[var(--border-strong)] focus:outline-none focus:border-[var(--brand-accent)]/50 text-[var(--text-primary)] disabled:opacity-60" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[9px] uppercase tracking-wider font-black text-[var(--text-muted)]">Time</Label>
+          <input disabled={readOnly} value={lunchTime} onChange={e => setLunchTime(e.target.value)} type="time" className="w-full h-9 px-3 rounded-lg text-xs bg-[var(--surface-secondary)] border border-[var(--border-strong)] focus:outline-none focus:border-[var(--brand-accent)]/50 text-[var(--text-primary)] disabled:opacity-60" />
+        </div>
+
+        <div className="col-span-2 text-xs font-black uppercase tracking-wider text-[var(--brand-accent)] mt-2">🍽 Dinner</div>
+        <div className="space-y-1">
+          <Label className="text-[9px] uppercase tracking-wider font-black text-[var(--text-muted)]">Menu</Label>
+          <input disabled={readOnly} value={dinnerMenu} onChange={e => setDinnerMenu(e.target.value)} placeholder="E.g. Paneer Butter Masala" className="w-full h-9 px-3 rounded-lg text-xs bg-[var(--surface-secondary)] border border-[var(--border-strong)] focus:outline-none focus:border-[var(--brand-accent)]/50 text-[var(--text-primary)] disabled:opacity-60" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[9px] uppercase tracking-wider font-black text-[var(--text-muted)]">Time</Label>
+          <input disabled={readOnly} value={dinnerTime} onChange={e => setDinnerTime(e.target.value)} type="time" className="w-full h-9 px-3 rounded-lg text-xs bg-[var(--surface-secondary)] border border-[var(--border-strong)] focus:outline-none focus:border-[var(--brand-accent)]/50 text-[var(--text-primary)] disabled:opacity-60" />
+        </div>
+        
+        <div className="col-span-2 border-t border-[var(--border-subtle)] my-2"></div>
+
+        <div className="space-y-1">
+          <Label className="text-[9px] uppercase tracking-wider font-black text-[var(--text-muted)]">Expected Residents</Label>
+          <input disabled={readOnly} value={expectedPeople} onChange={e => setExpectedPeople(e.target.value)} type="number" placeholder="50" className="w-full h-9 px-3 rounded-lg text-xs bg-[var(--surface-secondary)] border border-[var(--border-strong)] focus:outline-none focus:border-[var(--brand-accent)]/50 text-[var(--text-primary)] disabled:opacity-60" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[9px] uppercase tracking-wider font-black text-[var(--text-muted)]">Notes (Optional)</Label>
+          <input disabled={readOnly} value={notes} onChange={e => setNotes(e.target.value)} placeholder="E.g. Less spicy" className="w-full h-9 px-3 rounded-lg text-xs bg-[var(--surface-secondary)] border border-[var(--border-strong)] focus:outline-none focus:border-[var(--brand-accent)]/50 text-[var(--text-primary)] disabled:opacity-60" />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-3 pt-3 border-t border-[var(--border-subtle)]">
+        {isSaving ? (
+          <GlowButton disabled variant="outline" className="w-full h-9 text-xs rounded-xl border-[var(--border-strong)] bg-[var(--surface-secondary)]">Saving...</GlowButton>
+        ) : (
+          <>
+            {!isPublished && !isDraft && (
+              <>
+                <GlowButton onClick={handleSaveDraft} variant="outline" className="flex-1 h-9 text-xs rounded-xl border-[var(--border-strong)] bg-[var(--surface-primary)] hover:bg-[var(--surface-secondary)]">Save Draft</GlowButton>
+                <GlowButton onClick={handlePublish} className="flex-1 h-9 text-xs rounded-xl glow-primary">Publish Menu</GlowButton>
+              </>
+            )}
+            {isDraft && (
+              <>
+                <GlowButton onClick={handleUpdate} variant="outline" className="flex-1 h-9 text-xs rounded-xl border-[var(--border-strong)] bg-[var(--surface-primary)] hover:bg-[var(--surface-secondary)]">Update Draft</GlowButton>
+                <GlowButton onClick={handlePublish} className="flex-1 h-9 text-xs rounded-xl glow-primary">Publish Menu</GlowButton>
+                <GlowButton onClick={handleDelete} variant="outline" className="h-9 text-xs rounded-xl border-red-500/20 text-red-500 bg-red-500/5 hover:bg-red-500/10">Delete Draft</GlowButton>
+              </>
+            )}
+            {isPublished && (
+              <GlowButton onClick={handleUpdate} variant="outline" className="flex-1 h-9 text-xs rounded-xl border-[var(--border-strong)] bg-[var(--surface-primary)] hover:bg-[var(--surface-secondary)]">Update Menu</GlowButton>
+            )}
+          </>
+        )}
+      </div>
+    </GlassCard>
+  );
+}
+
 export default function OwnerDashboard() {
   const queryClient = useQueryClient();
   const { data: stats, isLoading: statsLoading } = useGetOwnerStats({ query: { queryKey: getGetOwnerStatsQueryKey() } });
@@ -238,7 +419,7 @@ export default function OwnerDashboard() {
     toast.success("🔊 Reading summary...");
   };
 
-  const todayMeals = meals?.filter(m => {
+  const todayMeals = meals?.filter((m: Meal) => {
     const d = new Date(m.date), t = new Date();
     return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
   }) ?? [];
@@ -418,6 +599,8 @@ export default function OwnerDashboard() {
         {/* Left Span 2: Main Operational Tools (Scheduler, Forms) */}
         <div className="lg:col-span-2 space-y-6">
           
+          <TodaysMenuCard />
+
           {/* Weekly Meal Scheduler */}
           <GlassCard className="p-0 overflow-hidden">
             <div className="p-5 border-b border-[var(--border-subtle)] bg-[var(--surface-secondary)] flex justify-between items-center">

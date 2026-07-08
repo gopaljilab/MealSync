@@ -35,6 +35,7 @@ import type {
   NgoRequest,
   OwnerStats,
   RegisterBody,
+  UpsertMenuBody,
   User,
 } from "./api.schemas";
 
@@ -587,6 +588,246 @@ export const useCreateMeal = <
   TContext
 > => {
   return useMutation(getCreateMealMutationOptions(options));
+};
+
+/**
+ * @summary Get today's menu for the logged-in PG owner
+ */
+export const getGetTodaysMenuUrl = () => {
+  return `/api/meals/today`;
+};
+
+export const getTodaysMenu = async (options?: RequestInit): Promise<Meal> => {
+  return customFetch<Meal>(getGetTodaysMenuUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTodaysMenuQueryKey = () => {
+  return [`/api/meals/today`] as const;
+};
+
+export const getGetTodaysMenuQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTodaysMenu>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getTodaysMenu>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTodaysMenuQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTodaysMenu>>> = ({
+    signal,
+  }) => getTodaysMenu({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getTodaysMenu>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetTodaysMenuQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTodaysMenu>>
+>;
+export type GetTodaysMenuQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get today's menu for the logged-in PG owner
+ */
+
+export function useGetTodaysMenu<
+  TData = Awaited<ReturnType<typeof getTodaysMenu>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getTodaysMenu>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetTodaysMenuQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Delete today's menu if it's in draft status
+ */
+export const getDeleteTodaysMenuUrl = () => {
+  return `/api/meals/today`;
+};
+
+export const deleteTodaysMenu = async (
+  options?: RequestInit,
+): Promise<MessageResponse> => {
+  return customFetch<MessageResponse>(getDeleteTodaysMenuUrl(), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteTodaysMenuMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteTodaysMenu>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteTodaysMenu>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["deleteTodaysMenu"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteTodaysMenu>>,
+    void
+  > = () => {
+    return deleteTodaysMenu(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteTodaysMenuMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteTodaysMenu>>
+>;
+
+export type DeleteTodaysMenuMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Delete today's menu if it's in draft status
+ */
+export const useDeleteTodaysMenu = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteTodaysMenu>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteTodaysMenu>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getDeleteTodaysMenuMutationOptions(options));
+};
+
+/**
+ * @summary Create or update today's menu
+ */
+export const getUpsertTodaysMenuUrl = () => {
+  return `/api/meals/upsert`;
+};
+
+export const upsertTodaysMenu = async (
+  upsertMenuBody: UpsertMenuBody,
+  options?: RequestInit,
+): Promise<Meal> => {
+  return customFetch<Meal>(getUpsertTodaysMenuUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(upsertMenuBody),
+  });
+};
+
+export const getUpsertTodaysMenuMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof upsertTodaysMenu>>,
+    TError,
+    { data: BodyType<UpsertMenuBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof upsertTodaysMenu>>,
+  TError,
+  { data: BodyType<UpsertMenuBody> },
+  TContext
+> => {
+  const mutationKey = ["upsertTodaysMenu"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof upsertTodaysMenu>>,
+    { data: BodyType<UpsertMenuBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return upsertTodaysMenu(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpsertTodaysMenuMutationResult = NonNullable<
+  Awaited<ReturnType<typeof upsertTodaysMenu>>
+>;
+export type UpsertTodaysMenuMutationBody = BodyType<UpsertMenuBody>;
+export type UpsertTodaysMenuMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create or update today's menu
+ */
+export const useUpsertTodaysMenu = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof upsertTodaysMenu>>,
+    TError,
+    { data: BodyType<UpsertMenuBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof upsertTodaysMenu>>,
+  TError,
+  { data: BodyType<UpsertMenuBody> },
+  TContext
+> => {
+  return useMutation(getUpsertTodaysMenuMutationOptions(options));
 };
 
 /**

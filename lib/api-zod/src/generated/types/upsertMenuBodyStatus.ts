@@ -6,12 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type MealStatus = (typeof MealStatus)[keyof typeof MealStatus];
+export type UpsertMenuBodyStatus =
+  (typeof UpsertMenuBodyStatus)[keyof typeof UpsertMenuBodyStatus];
 
-export const MealStatus = {
-  pending: "pending",
-  served: "served",
-  completed: "completed",
+export const UpsertMenuBodyStatus = {
   draft: "draft",
   published: "published",
 } as const;

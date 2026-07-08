@@ -27,5 +27,7 @@ export * from "./ngoRequestStatus";
 export * from "./ownerStats";
 export * from "./registerBody";
 export * from "./registerBodyRole";
+export * from "./upsertMenuBody";
+export * from "./upsertMenuBodyStatus";
 export * from "./user";
 export * from "./userRole";

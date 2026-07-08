@@ -66,11 +66,20 @@ export const MealStatus = {
   pending: "pending",
   served: "served",
   completed: "completed",
+  draft: "draft",
+  published: "published",
 } as const;
 
 export interface Meal {
   id: number;
-  menu: string;
+  menu?: string;
+  breakfastMenu?: string;
+  breakfastTime?: string;
+  lunchMenu?: string;
+  dinnerMenu?: string;
+  lunchTime?: string;
+  dinnerTime?: string;
+  notes?: string;
   expectedPeople: number;
   predictedMeals?: number;
   actualServed?: number;
@@ -78,6 +87,26 @@ export interface Meal {
   date: string;
   ngoNotified?: boolean;
   status: MealStatus;
+}
+
+export type UpsertMenuBodyStatus =
+  (typeof UpsertMenuBodyStatus)[keyof typeof UpsertMenuBodyStatus];
+
+export const UpsertMenuBodyStatus = {
+  draft: "draft",
+  published: "published",
+} as const;
+
+export interface UpsertMenuBody {
+  breakfastMenu?: string;
+  breakfastTime?: string;
+  lunchMenu: string;
+  dinnerMenu: string;
+  lunchTime: string;
+  dinnerTime: string;
+  expectedPeople: number;
+  notes?: string;
+  status: UpsertMenuBodyStatus;
 }
 
 export interface CreateMealBody {
