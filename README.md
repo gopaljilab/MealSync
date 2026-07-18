@@ -2,7 +2,7 @@
   <img src="assets/mealsync-banner.png" alt="MealSync AI — intelligent food, zero waste, max impact" width="100%" />
 </p>
 
-# 🍽️ MealSync
+# 🍽️ MealSync — Intelligent Food Management Platform
 
 > **Intelligent food management and redistribution for shared communities.**
 > **Predict. Optimize. Redistribute. Reduce food waste.**
@@ -14,6 +14,8 @@
 [![License](https://img.shields.io/badge/License-MIT-22C55E)](#license)
 ![Built for Hackathons](https://img.shields.io/badge/Built%20for-Hackathons-F97316)
 
+🚀 [Live Demo](#) &nbsp;·&nbsp; 📽 [Demo Video](#) &nbsp;·&nbsp; 📖 [API Docs](#)
+
 MealSync is a smart food management and redistribution platform for PGs, hostels, and shared-living communities. It combines resident meal confirmation, demand planning, waste analytics, and automated NGO redistribution in one connected workflow.
 
 **🌱 Reduce waste** &nbsp; **📊 Make data-informed decisions** &nbsp; **🤝 Redistribute surplus food** &nbsp; **📈 Track sustainable impact**
@@ -22,6 +24,7 @@ MealSync is a smart food management and redistribution platform for PGs, hostels
 
 - [Core Users](#core-users)
 - [Project Highlights](#project-highlights)
+- [Feature Overview](#feature-overview)
 - [Dashboard Screenshots](#dashboard-screenshots)
 - [Why MealSync?](#why-mealsync)
 - [Key Features](#key-features)
@@ -53,7 +56,9 @@ MealSync is a smart food management and redistribution platform for PGs, hostels
 - [Security](#security)
 - [Performance & Developer Experience](#performance--developer-experience)
 - [Impact](#impact)
+- [Project Vision](#project-vision)
 - [Future Improvements](#future-improvements)
+- [Built With](#built-with)
 - [License](#license)
 
 ## Core Users
@@ -72,7 +77,25 @@ MealSync is a smart food management and redistribution platform for PGs, hostels
 - Planning, waste-cost, and sustainability insights for day-to-day kitchen decisions
 - PostgreSQL persistence through Drizzle ORM in a pnpm workspace monorepo
 
-## Dashboard Screenshots
+## Repository Statistics
+
+| 🏗️ Architecture | 👥 User Roles | 🖥️ Dashboards | 🔌 REST APIs | 🗄️ Database | 💻 Language | ⚙️ API Client |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Monorepo** | **3 Roles** | **3 Dashboards** | **20+ Endpoints** | **10+ Tables** | **100% TypeScript** | **OpenAPI Generated** |
+
+## Feature Overview
+
+| 🍽️ Demand Planning | ♻️ Waste Analytics | 🤝 NGO Automation |
+| --- | --- | --- |
+| Combine attendance signals and expected demand to plan meals with more confidence. | Track leftovers, waste percentage, and estimated cost loss. | Create a surplus pickup request automatically when leftovers meet the threshold. |
+
+| 🗓️ Resident Scheduling | 💬 Community Feedback | 🌱 Impact Tracking |
+| --- | --- | --- |
+| Let residents maintain a weekly meal schedule and confirm individual meals. | Collect ratings, feedback, and menu preferences through polls. | Surface sustainability signals for residents, owners, NGOs, and the platform. |
+
+## Dashboard Demo
+
+*(A 20–30 second GIF demonstrating the end-to-end flow: Resident confirms meal → Owner dashboard updates → Leftover reported → NGO request appears → Impact updated)*
 
 ### PG Owner Dashboard
 
@@ -101,33 +124,9 @@ MealSync connects the people and data involved—from resident intent to owner p
 
 ## Key Features
 
-### PG Owner Dashboard
-
-- Meal input and demand prediction
-- Leftover tracking with automatic NGO request creation
-- Waste analytics and Green Score
-- Raw material calculator for ingredient planning
-- Waste-to-cost insights
-- Smart suggestions using trends and context
-- Global impact tracking across meals, waste, and redistribution
-
-### NGO Dashboard
-
-- Real-time surplus food pickup requests
-- Accept, reject, and confirm pickup actions
-- Suggested pickup route ordering
-- Food details such as type, quantity, and preparation time
-- Impact metrics for collected meals and completed pickups
-- Pickup history for completed redistribution activity
-
-### Resident Dashboard
-
-- Meal confirmation system
-- Weekly schedule editor with auto-fill support
-- Meal reminder banner
-- Community poll voting
-- Sustainability impact tracking
-- Feedback and rating system
+| 👨‍💼 PG Owner | 🤝 NGO Partner | 🏠 Resident |
+| --- | --- | --- |
+| • Meal input and demand prediction<br>• Leftover tracking & automatic NGO requests<br>• Waste analytics and Green Score<br>• Raw material calculator<br>• Waste-to-cost insights<br>• Smart suggestions based on trends<br>• Global impact tracking | • Real-time surplus food pickup requests<br>• Accept, reject, and confirm pickups<br>• Suggested pickup route ordering<br>• Food details (type, quantity, prep time)<br>• Impact metrics for collected meals<br>• Pickup history and redistribution log | • Meal confirmation system<br>• Weekly schedule editor with auto-fill<br>• Meal reminder banner<br>• Community poll voting<br>• Sustainability impact tracking<br>• Feedback and rating system |
 
 ## Planning & Intelligence APIs
 
@@ -271,6 +270,8 @@ sequenceDiagram
 | --- | --- |
 | User roles | 3 — PG owner, resident, and NGO partner |
 | Role-specific dashboards | 3 |
+| REST operations | 43 across the API route modules |
+| Relational tables | 8 PostgreSQL tables |
 | Architecture | pnpm workspace monorepo |
 | API style | REST with OpenAPI-generated React client |
 | Data access | Drizzle ORM with PostgreSQL |
@@ -293,7 +294,19 @@ MealSync/
 │   └── screenshots/    # PG owner, resident, and NGO dashboard captures
 ├── artifacts/
 │   ├── mealsync/       # React + Vite user interface
+│   │   └── src/
+│   │       ├── components/  # Shared UI, auth, landing, and map components
+│   │       ├── pages/       # Screens and role-specific dashboards
+│   │       ├── hooks/       # Reusable React hooks
+│   │       └── lib/         # Frontend utilities
 │   └── api-server/     # Express REST API and business workflows
+│       └── src/
+│           ├── controllers/ # Request handlers and business logic
+│           ├── routes/      # Express route definitions
+│           ├── middlewares/ # HTTP middleware extension point
+│           ├── services/    # External integrations
+│           ├── models/      # Data access layer
+│           └── lib/         # Server utilities and logging
 ├── lib/
 │   ├── db/             # Drizzle schema and database setup
 │   ├── api-spec/       # OpenAPI specification
@@ -478,6 +491,10 @@ MealSync uses session-based authentication with `express-session`. API requests 
 - Supports NGOs with structured surplus food pickup requests
 - Builds a measurable sustainability ecosystem
 
+## Project Vision
+
+> MealSync aims to become an intelligent operating system for community kitchens—helping organizations optimize meal planning, minimize waste, and maximize social impact through data-informed decision-making.
+
 ## Future Improvements
 
 - [x] Meal confirmation and weekly scheduling
@@ -491,6 +508,18 @@ MealSync uses session-based authentication with `express-session`. API requests 
 - [ ] Mobile experience for residents and NGO partners
 - [ ] Multi-hostel administration and reporting
 - [ ] Carbon-footprint and weather-aware planning
+
+## Built With
+
+- **React**
+- **TypeScript**
+- **Express**
+- **Drizzle ORM**
+- **PostgreSQL**
+- **OpenAPI**
+- **Orval**
+- **TailwindCSS**
+- **Recharts**
 
 ## License
 
