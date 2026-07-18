@@ -2,9 +2,9 @@
   <img src="assets/mealsync-banner.png" alt="MealSync AI — intelligent food, zero waste, max impact" width="100%" />
 </p>
 
-# 🍽️ MealSync AI
+# 🍽️ MealSync
 
-> **AI-powered food management and redistribution for shared communities.**
+> **Intelligent food management and redistribution for shared communities.**
 > **Predict. Optimize. Redistribute. Reduce food waste.**
 
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
@@ -14,24 +14,28 @@
 [![License](https://img.shields.io/badge/License-MIT-22C55E)](#license)
 ![Built for Hackathons](https://img.shields.io/badge/Built%20for-Hackathons-F97316)
 
-MealSync is an intelligent food management and redistribution platform for PGs, hostels, and shared-living communities. It combines resident meal confirmation, demand prediction, waste analytics, and automated NGO redistribution in one connected workflow.
+MealSync is a smart food management and redistribution platform for PGs, hostels, and shared-living communities. It combines resident meal confirmation, demand planning, waste analytics, and automated NGO redistribution in one connected workflow.
 
 **🌱 Reduce waste** &nbsp; **📊 Make data-informed decisions** &nbsp; **🤝 Redistribute surplus food** &nbsp; **📈 Track sustainable impact**
 
 ## Table of Contents
 
 - [Core Users](#core-users)
+- [Project Highlights](#project-highlights)
+- [Dashboard Screenshots](#dashboard-screenshots)
 - [Why MealSync?](#why-mealsync)
 - [Key Features](#key-features)
   - [PG Owner Dashboard](#pg-owner-dashboard)
   - [NGO Dashboard](#ngo-dashboard)
   - [Resident Dashboard](#resident-dashboard)
-- [Smart Intelligence APIs](#smart-intelligence-apis)
-- [AI Features](#ai-features)
+- [Planning & Intelligence APIs](#planning--intelligence-apis)
+- [Intelligence Layer](#intelligence-layer)
 - [System Architecture](#system-architecture)
 - [Data Model](#data-model)
 - [End-to-End Flow](#end-to-end-flow)
 - [Tech Stack](#tech-stack)
+- [Project Metrics](#project-metrics)
+- [Design Principles](#design-principles)
 - [Project Structure](#project-structure)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
@@ -59,6 +63,28 @@ MealSync is an intelligent food management and redistribution platform for PGs, 
 | PG Owners | Plan meals, track demand, monitor waste, and trigger surplus redistribution |
 | Residents | Confirm meal attendance, manage weekly schedules, vote in polls, and submit feedback |
 | NGOs | View surplus food requests, accept pickups, complete collections, and track impact |
+
+## Project Highlights
+
+- Session-based authentication with role-aware access for owners, residents, and NGO partners
+- Type-safe REST APIs built from shared OpenAPI, TypeScript, and Zod contracts
+- Automated NGO pickup workflow when reported surplus reaches the configured threshold
+- Planning, waste-cost, and sustainability insights for day-to-day kitchen decisions
+- PostgreSQL persistence through Drizzle ORM in a pnpm workspace monorepo
+
+## Dashboard Screenshots
+
+### PG Owner Dashboard
+
+<img src="assets/screenshots/owner-dashboard.png" alt="MealSync PG owner dashboard with menu planning, demand planning, and impact metrics" width="100%" />
+
+### Resident Dashboard
+
+<img src="assets/screenshots/resident-dashboard.png" alt="MealSync resident dashboard with meal confirmation, schedule, and feedback controls" width="100%" />
+
+### NGO Dashboard
+
+<img src="assets/screenshots/ngo-dashboard.png" alt="MealSync NGO dashboard with pickup coordination and redistribution metrics" width="100%" />
 
 ## Why MealSync?
 
@@ -103,9 +129,9 @@ MealSync connects the people and data involved—from resident intent to owner p
 - Sustainability impact tracking
 - Feedback and rating system
 
-## Smart Intelligence APIs
+## Planning & Intelligence APIs
 
-MealSync includes intelligence endpoints for planning, analytics, and impact tracking.
+MealSync exposes planning and intelligence endpoints for kitchen operations, analytics, and impact tracking.
 
 | Endpoint | Purpose |
 | --- | --- |
@@ -121,11 +147,11 @@ MealSync includes intelligence endpoints for planning, analytics, and impact tra
 | `GET /api/polls` | Fetch active community polls |
 | `POST /api/polls/:id/vote` | Submit a poll vote |
 
-## AI Features
+## Intelligence Layer
 
 ### Demand Planning
 
-Owners can record expected attendance and generate a meal prediction before food is prepared. The intelligence layer also incorporates recorded confirmations into its planning suggestions, helping owners make smaller, better-informed adjustments.
+Owners can record expected attendance and generate a meal prediction before food is prepared. The planning engine also incorporates recorded confirmations into its suggestions, helping owners make smaller, better-informed adjustments.
 
 ### Waste & Cost Analytics
 
@@ -147,14 +173,30 @@ flowchart TB
     Owners[PG Owners] --> Web
     NGOs[NGO Partners] --> Web
     Web -->|REST API with session cookies| API[Express 5 API]
-    API --> Auth[Authentication & role checks]
-    API --> Intelligence[Intelligence & analytics]
-    API --> Redistribution[NGO redistribution workflow]
-    Auth --> DB[(PostgreSQL)]
-    Intelligence --> DB
-    Redistribution --> DB
-    API --> ORM[Drizzle ORM]
-    ORM --> DB
+
+    subgraph Services[Business modules]
+        Auth[Authentication & role checks]
+        Meals[Meal & schedule service]
+        Planning[Planning & intelligence engine]
+        Redistribution[NGO redistribution service]
+        Community[Feedback & poll service]
+        Analytics[Impact & waste analytics]
+    end
+
+    API --> Auth
+    API --> Meals
+    API --> Planning
+    API --> Redistribution
+    API --> Community
+    API --> Analytics
+
+    Auth --> ORM[Drizzle ORM]
+    Meals --> ORM
+    Planning --> ORM
+    Redistribution --> ORM
+    Community --> ORM
+    Analytics --> ORM
+    ORM --> DB[(PostgreSQL)]
 ```
 
 ## Data Model
@@ -223,12 +265,32 @@ sequenceDiagram
 | Monorepo | pnpm workspaces |
 | Language | TypeScript |
 
+## Project Metrics
+
+| Metric | Detail |
+| --- | --- |
+| User roles | 3 — PG owner, resident, and NGO partner |
+| Role-specific dashboards | 3 |
+| Architecture | pnpm workspace monorepo |
+| API style | REST with OpenAPI-generated React client |
+| Data access | Drizzle ORM with PostgreSQL |
+| Language | TypeScript across frontend, backend, and shared libraries |
+
+## Design Principles
+
+- **Modular:** distinct modules cover authentication, meals, schedules, planning, redistribution, feedback, polls, and impact.
+- **Type-safe:** shared schemas and generated clients keep API consumers and server contracts aligned.
+- **API-first:** OpenAPI-driven integration keeps the frontend and backend independently maintainable.
+- **Role-aware:** each dashboard is designed around the operational needs of its user type.
+- **Impact-oriented:** every workflow connects kitchen operations to waste reduction and redistribution outcomes.
+
 ## Project Structure
 
 ```text
 MealSync/
 ├── assets/             # Repository documentation assets
-│   └── mealsync-banner.png
+│   ├── mealsync-banner.png
+│   └── screenshots/    # PG owner, resident, and NGO dashboard captures
 ├── artifacts/
 │   ├── mealsync/       # React + Vite user interface
 │   └── api-server/     # Express REST API and business workflows
