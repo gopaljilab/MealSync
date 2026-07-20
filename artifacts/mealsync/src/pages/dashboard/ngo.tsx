@@ -185,6 +185,7 @@ export default function NgoDashboard() {
   const [completing, setCompleting] = useState<number | null>(null);
   const [qrModal, setQrModal] = useState<{ id: number } | null>(null);
   const [mapView, setMapView] = useState(false);
+  const [optimizedRoute, setOptimizedRoute] = useState<number[] | null>(null);
 
   const refreshImpact = useCallback(() => {
     fetch("/api/intelligence/ngo-impact", { credentials: "include" }).then(r => r.ok ? r.json() : null).then(d => d && setImpact(d)).catch(() => { });
@@ -210,7 +211,7 @@ export default function NgoDashboard() {
   };
 
   const sorted = requests ? sortByTime(requests) : null;
-  const accepted = history?.filter(r => r.status === "accepted") ?? [];
+  const accepted = history?.filter((r: any) => r.status === "accepted") ?? [];
 
   return (
     <PageShell>
@@ -234,7 +235,10 @@ export default function NgoDashboard() {
       {/* Interactive Google Maps view */}
       {mapView && sorted && sorted.length > 0 && (
         <GlassCard className="overflow-hidden p-0 border-[var(--border-strong)]" data-testid="card-map-view">
-          <GoogleLocationMap />
+          <GoogleLocationMap 
+            pickupRequests={sorted}
+            onRouteOptimized={setOptimizedRoute}
+          />
         </GlassCard>
       )}
 
@@ -272,17 +276,21 @@ export default function NgoDashboard() {
           <div className="mb-4 flex items-center gap-2">
             <Compass size={16} className="text-[var(--brand-accent)]" />
             <h3 className="text-sm font-black uppercase tracking-wider text-[var(--text-primary)]">Logistical Optimization</h3>
-            <span className="text-[9px] font-bold uppercase tracking-wider bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border border-[var(--brand-accent)]/20 px-2 py-0.5 rounded-full ml-auto">Optimal Route</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border border-[var(--brand-accent)]/20 px-2 py-0.5 rounded-full ml-auto">
+              {optimizedRoute ? "AI Optimized Route" : "Time Optimized Route"}
+            </span>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
-            {sorted.map((req, i) => (
+            {(optimizedRoute && optimizedRoute.length === sorted.length 
+              ? optimizedRoute.map(id => sorted.find((r: any) => r.id === id)).filter(Boolean) 
+              : sorted).map((req: any, i: number, arr: any[]) => (
               <div key={req.id} className="flex items-center gap-3">
                 <div className="text-[10px] font-bold px-3 py-1.5 bg-[var(--surface-primary)] border border-[var(--border-strong)] rounded-full flex items-center gap-1.5 transition-colors hover:border-[var(--brand-accent)]/20">
                   <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand-accent)]" />
                   <span className="text-[var(--text-primary)]">{req.pgName}</span>
                   <span className="text-[var(--text-muted)]">({req.availableMeals})</span>
                 </div>
-                {i < sorted.length - 1 && <ArrowRight size={14} className="text-[var(--text-muted)]" />}
+                {i < arr.length - 1 && <ArrowRight size={14} className="text-[var(--text-muted)]" />}
               </div>
             ))}
           </div>
@@ -355,7 +363,7 @@ export default function NgoDashboard() {
           {accepted.length > 0 && (
             <div className="space-y-4">
               <h2 className="text-lg font-black tracking-tight text-[var(--text-primary)] uppercase tracking-wider">Awaiting Verification</h2>
-              {accepted.map(item => (
+              {accepted.map((item: any) => (
                 <GlassCard key={item.id} className="border border-[var(--border-strong)] border-l-4 border-l-[var(--status-warning)] p-5 shadow-sm animate-slide-up" data-testid={`card-accepted-${item.id}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div>

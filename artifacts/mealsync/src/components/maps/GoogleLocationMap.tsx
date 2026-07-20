@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Crosshair, LocateFixed, MapPin, Search } from "lucide-react";
 import { GlowButton } from "@/components/ui/premium";
 
-const DEFAULT_CENTER: GoogleMapsLatLngLiteral = { lat: 20.5937, lng: 78.9629 };
+const DEFAULT_CENTER: any = { lat: 20.5937, lng: 78.9629 };
 const GOOGLE_MAPS_SCRIPT_ID = "google-maps-javascript-api";
 
-let googleMapsScriptPromise: Promise<GoogleMapsNamespace> | null = null;
+let googleMapsScriptPromise: Promise<any> | null = null;
 
 function loadGoogleMaps(apiKey: string) {
   if (window.google?.maps?.places) {
@@ -19,7 +19,7 @@ function loadGoogleMaps(apiKey: string) {
   googleMapsScriptPromise = new Promise((resolve, reject) => {
     const existing = document.getElementById(GOOGLE_MAPS_SCRIPT_ID) as HTMLScriptElement | null;
 
-    window.gm_authFailure = () => {
+    (window as any).gm_authFailure = () => {
       reject(new Error("Google Maps authentication failed. Check the API key, referrer restrictions, billing, and enabled APIs."));
     };
 
@@ -66,21 +66,29 @@ function getLocationErrorMessage(error: GeolocationPositionError) {
   return "Location lookup timed out. Search still works.";
 }
 
-export function GoogleLocationMap() {
+export function GoogleLocationMap({
+  pickupRequests = [],
+  onRouteOptimized,
+}: {
+  pickupRequests?: { id: number; pgLocation: string; pgName: string }[];
+  onRouteOptimized?: (orderedIds: number[]) => void;
+}) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
-  const mapInstanceRef = useRef<GoogleMapsMap | null>(null);
-  const userMarkerRef = useRef<GoogleMapsMarker | null>(null);
-  const selectedMarkerRef = useRef<GoogleMapsMarker | null>(null);
-  const currentPositionRef = useRef<GoogleMapsLatLngLiteral | null>(null);
-
+  const mapInstanceRef = useRef<any | null>(null);
+  const directionsRendererRef = useRef<any | null>(null);
+  const userMarkerRef = useRef<any | null>(null);
+  const selectedMarkerRef = useRef<any | null>(null);
+  
+  const [currentLocation, setCurrentLocation] = useState<any | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [error, setError] = useState("");
   const [locationMessage, setLocationMessage] = useState("Requesting your current location...");
   const [selectedPlace, setSelectedPlace] = useState("");
   const [isLocating, setIsLocating] = useState(false);
 
-  const apiKey = __GOOGLE_MAPS_API_KEY__;
+  // @ts-ignore
+  const apiKey = typeof __GOOGLE_MAPS_API_KEY__ !== 'undefined' ? __GOOGLE_MAPS_API_KEY__ : "";
 
   useEffect(() => {
     let cancelled = false;
@@ -112,7 +120,13 @@ export function GoogleLocationMap() {
           streetViewControl: false,
         });
 
+        const directionsRenderer = new maps.DirectionsRenderer({
+          map,
+          suppressMarkers: false,
+        });
+
         mapInstanceRef.current = map;
+        directionsRendererRef.current = directionsRenderer;
         setStatus("ready");
 
         if (searchRef.current) {
@@ -191,7 +205,7 @@ export function GoogleLocationMap() {
           lng: position.coords.longitude,
         };
 
-        currentPositionRef.current = current;
+        setCurrentLocation(current);
         setLocationMessage("Current location pinned.");
         setIsLocating(false);
         map.setCenter(current);
@@ -226,14 +240,61 @@ export function GoogleLocationMap() {
   }, [status]);
 
   const centerOnCurrentLocation = () => {
-    if (currentPositionRef.current && mapInstanceRef.current) {
-      mapInstanceRef.current.setCenter(currentPositionRef.current);
+    if (currentLocation && mapInstanceRef.current) {
+      mapInstanceRef.current.setCenter(currentLocation);
       mapInstanceRef.current.setZoom(15);
       return;
     }
-
     requestLocation();
   };
+
+  // Route Optimization Effect
+  useEffect(() => {
+    if (status !== "ready" || !window.google?.maps || !currentLocation || !directionsRendererRef.current) return;
+
+    if (pickupRequests.length === 0) {
+      directionsRendererRef.current.setDirections({ routes: [] });
+      return;
+    }
+
+    const maps = window.google.maps as any;
+    const directionsService = new maps.DirectionsService();
+    const origin = currentLocation;
+    const waypoints = pickupRequests.slice(0, -1).map(req => ({
+      location: req.pgLocation,
+      stopover: true,
+    }));
+    const destination = pickupRequests[pickupRequests.length - 1].pgLocation;
+
+    directionsService.route(
+      {
+        origin,
+        destination,
+        waypoints,
+        optimizeWaypoints: true,
+        travelMode: maps.TravelMode.DRIVING,
+      },
+      (result: any, routeStatus: string) => {
+        if (routeStatus === maps.DirectionsStatus.OK && result) {
+          directionsRendererRef.current.setDirections(result);
+          
+          if (onRouteOptimized && result.routes && result.routes[0]) {
+            const order = result.routes[0].waypoint_order; 
+            const optimizedIds: number[] = [];
+            
+            order.forEach((idx: number) => {
+              optimizedIds.push(pickupRequests[idx].id);
+            });
+            optimizedIds.push(pickupRequests[pickupRequests.length - 1].id);
+            
+            onRouteOptimized(optimizedIds);
+          }
+        } else {
+          console.error("Directions request failed due to " + routeStatus);
+        }
+      }
+    );
+  }, [status, currentLocation, pickupRequests]); // Omit onRouteOptimized to prevent infinite loops if it's not memoized
 
   return (
     <div className="overflow-hidden border border-[var(--border-strong)] bg-[var(--surface-primary)]" data-testid="card-google-map-view">
@@ -241,9 +302,9 @@ export function GoogleLocationMap() {
         <div>
           <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-[var(--text-primary)]">
             <MapPin size={16} className="text-[var(--brand-accent)]" />
-            <span>Redistribution Mapping</span>
+            <span>Redistribution Mapping & Optimization</span>
           </h3>
-          <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">Live Google Maps view with location and place search.</p>
+          <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">Live Google Maps view with route optimization for pickups.</p>
         </div>
         <GlowButton
           type="button"
