@@ -14,22 +14,27 @@ export const Logo: React.FC<LogoProps> = ({
   iconOnly = false,
 }) => {
   const sizeMap = {
-    sm: 32,
-    md: 48,
-    lg: 64,
-    xl: 96,
+    sm: { height: 48, text: "text-sm" },
+    md: { height: 72, text: "text-lg" },
+    lg: { height: 96, text: "text-xl" },
+    xl: { height: 128, text: "text-2xl" },
   };
 
-  const height = sizeMap[size];
+  const { height, text: textSize } = sizeMap[size];
 
   return (
-    <div className={`flex items-center select-none ${className}`}>
+    <div className={`flex items-center gap-4 select-none ${className}`}>
       <img 
         src="/logo.png" 
         alt="MealSync Logo" 
-        className="object-contain drop-shadow-md"
+        className="object-contain drop-shadow-md shrink-0"
         style={{ height }}
       />
+      {showText && !iconOnly && (
+        <span className={`font-semibold tracking-wide text-[var(--text-primary)] ${textSize}`}>
+          Every Meal Matters
+        </span>
+      )}
     </div>
   );
 };
