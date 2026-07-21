@@ -31,8 +31,8 @@ export const Logo: React.FC<LogoProps> = ({
         style={{ height }}
       />
       {showText && !iconOnly && (
-        <span className={`font-semibold tracking-wide text-[var(--text-primary)] ${textSize}`}>
-          Every Meal Matters
+        <span className={`font-black tracking-tight text-[var(--text-primary)] ${textSize}`}>
+          MealSync AI
         </span>
       )}
     </div>
